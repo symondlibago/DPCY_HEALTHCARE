@@ -9,14 +9,15 @@ import { CustomDatePicker } from './CustomInputs';
 const emptyForm = () => ({
   id: null, id_number: '', name: '', position: '', sex: '', age: '',
   birthday: '', phone_number: '', email: '', address: '', date_hired: '',
-  status: 'Active', notes: ''
+  notes: '', create_account: false, username: '', password: '',
+  password_confirmation: '', account_role: 'staff'
 });
 
 export default function Employee() {
   const [employees, setEmployees] = useState([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
-  const [filterStatus, setFilterStatus] = useState('All');
+  const [filterRole, setFilterRole] = useState('All');
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
@@ -38,9 +39,10 @@ export default function Employee() {
         e.name?.toLowerCase().includes(search.toLowerCase()) ||
         e.id_number?.toLowerCase().includes(search.toLowerCase()) ||
         e.position?.toLowerCase().includes(search.toLowerCase());
-      const matchStatus = filterStatus === 'All' || e.status === filterStatus;
-      return matchSearch && matchStatus;
-    }), [employees, search, filterStatus]);
+      const matchRole = filterRole === 'All' ||
+        (filterRole === 'No Account' ? !e.user : e.user?.role === filterRole.toLowerCase());
+      return matchSearch && matchRole;
+    }), [employees, search, filterRole]);
 
   const openAdd = () => { setForm(emptyForm()); setModalOpen(true); };
   const openEdit = (e) => {
@@ -48,7 +50,9 @@ export default function Employee() {
       id: e.id, id_number: e.id_number || '', name: e.name || '', position: e.position || '',
       sex: e.sex || '', age: e.age || '', birthday: e.birthday?.split('T')[0] || '',
       phone_number: e.phone_number || '', email: e.email || '', address: e.address || '',
-      date_hired: e.date_hired?.split('T')[0] || '', status: e.status || 'Active', notes: e.notes || ''
+      date_hired: e.date_hired?.split('T')[0] || '', notes: e.notes || '',
+      create_account: false, username: '', password: '', password_confirmation: '',
+      account_role: 'staff', _linkedUser: e.user || null
     });
     setModalOpen(true);
   };
@@ -56,6 +60,11 @@ export default function Employee() {
   const handleSave = async () => {
     if (!form.name.trim()) return alert('Please enter the employee name.');
     if (!form.position.trim()) return alert('Please enter the position.');
+    if (form.create_account) {
+      if (!form.username.trim()) return alert('Please enter a username (email) for the login account.');
+      if (form.password.length < 8) return alert('Password must be at least 8 characters.');
+      if (form.password !== form.password_confirmation) return alert('Passwords do not match.');
+    }
     setSaving(true);
     try {
       const payload = {
@@ -69,11 +78,23 @@ export default function Employee() {
         email: form.email || null,
         address: form.address || null,
         date_hired: form.date_hired || null,
-        status: form.status,
         notes: form.notes || null,
       };
-      if (form.id) await updateEmployee(form.id, payload);
-      else await createEmployee(payload);
+      if (form.create_account) {
+        payload.create_account = true;
+        payload.username = form.username.trim();
+        payload.password = form.password;
+        payload.password_confirmation = form.password_confirmation;
+        payload.role = form.account_role;
+      }
+      let res;
+      if (form.id) res = await updateEmployee(form.id, payload);
+      else res = await createEmployee(payload);
+      const data = await res.json();
+      if (!data.success) {
+        const firstError = data.errors ? Object.values(data.errors)[0]?.[0] : null;
+        return alert(firstError || 'Failed to save employee.');
+      }
       setModalOpen(false);
       fetchData();
     } catch (e) {
@@ -116,11 +137,12 @@ export default function Employee() {
           </div>
         </div>
         <div className="space-y-1.5">
-          <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Status</label>
-          <select className="px-3 py-2.5 w-full border border-gray-300 rounded-xl text-sm bg-white" value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)}>
+          <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Account</label>
+          <select className="px-3 py-2.5 w-full border border-gray-300 rounded-xl text-sm bg-white" value={filterRole} onChange={(e) => setFilterRole(e.target.value)}>
             <option value="All">All</option>
-            <option value="Active">Active</option>
-            <option value="Inactive">Inactive</option>
+            <option value="Staff">Staff</option>
+            <option value="Admin">Admin</option>
+            <option value="No Account">No Account</option>
           </select>
         </div>
       </div>
@@ -137,7 +159,7 @@ export default function Employee() {
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Full Name</th>
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Position</th>
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Contact</th>
-                  <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Status</th>
+                  <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Account</th>
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase text-right">Actions</th>
                 </tr>
               </thead>
@@ -149,7 +171,13 @@ export default function Employee() {
                     <td className="p-5 text-sm text-gray-600">{e.position}</td>
                     <td className="p-5 text-sm text-gray-600">{e.phone_number || e.email || '—'}</td>
                     <td className="p-5">
-                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${e.status === 'Active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>{e.status}</span>
+                      {e.user ? (
+                        <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${e.user.role === 'admin' ? 'bg-indigo-100 text-indigo-700' : 'bg-green-100 text-green-700'}`}>
+                          {e.user.role.charAt(0).toUpperCase() + e.user.role.slice(1)}
+                        </span>
+                      ) : (
+                        <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-gray-100 text-gray-500">No Account</span>
+                      )}
                     </td>
                     <td className="p-5 text-right">
                       <div className="flex justify-end gap-2">
@@ -199,17 +227,50 @@ export default function Employee() {
                   <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Date Hired</label>
                   <CustomDatePicker value={form.date_hired} onChange={(v) => setForm({ ...form, date_hired: v })} />
                 </div>
-                <div className="space-y-1.5">
-                  <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Status</label>
-                  <select className="px-3 py-2.5 w-full border border-gray-300 rounded-xl text-sm bg-white" value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                    <option value="Active">Active</option><option value="Inactive">Inactive</option>
-                  </select>
-                </div>
                 <div className="md:col-span-2">{field('Address', 'address', { placeholder: 'Home address' })}</div>
                 <div className="md:col-span-2 space-y-1.5">
                   <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Notes</label>
                   <textarea rows={2} className="px-4 py-2.5 w-full border border-gray-300 rounded-xl text-sm" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} />
                 </div>
+
+                {form.id && form._linkedUser ? (
+                  <div className="md:col-span-2 space-y-1.5">
+                    <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Login Account</label>
+                    <span className="inline-block px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-100 text-indigo-700">
+                      {form._linkedUser.email} — {form._linkedUser.role}
+                    </span>
+                  </div>
+                ) : (
+                  <div className="md:col-span-2 border-t pt-4 space-y-4">
+                    <label className="flex items-center gap-2 cursor-pointer">
+                      <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-indigo-600" checked={form.create_account} onChange={(e) => setForm({ ...form, create_account: e.target.checked })} />
+                      <span className="text-sm font-bold text-gray-700">Create login account for this employee</span>
+                    </label>
+                    {form.create_account && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="md:col-span-2 space-y-1.5">
+                          <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Username (Email) *</label>
+                          <input type="email" className="px-4 py-2.5 w-full border border-gray-300 rounded-xl text-sm" placeholder="employee@dpcy.com" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Password *</label>
+                          <input type="password" className="px-4 py-2.5 w-full border border-gray-300 rounded-xl text-sm" placeholder="At least 8 characters" value={form.password} onChange={(e) => setForm({ ...form, password: e.target.value })} />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Confirm Password *</label>
+                          <input type="password" className="px-4 py-2.5 w-full border border-gray-300 rounded-xl text-sm" placeholder="Re-enter password" value={form.password_confirmation} onChange={(e) => setForm({ ...form, password_confirmation: e.target.value })} />
+                        </div>
+                        <div className="space-y-1.5">
+                          <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Role</label>
+                          <select className="px-3 py-2.5 w-full border border-gray-300 rounded-xl text-sm bg-white" value={form.account_role} onChange={(e) => setForm({ ...form, account_role: e.target.value })}>
+                            <option value="staff">Staff</option>
+                            <option value="admin">Admin</option>
+                          </select>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="p-5 border-t flex gap-2 sticky bottom-0 bg-white">
                 <Button onClick={() => setModalOpen(false)} variant="outline" className="flex-1 rounded-xl">Cancel</Button>
