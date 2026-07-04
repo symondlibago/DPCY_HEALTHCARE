@@ -112,7 +112,7 @@ export default function Receipts() {
         return;
       }
       setLastSaved(data.data);
-      if (printAfter) generateReceiptPDF(data.data, { autoPrint: true });
+      generateReceiptPDF(data.data, { autoPrint: printAfter });
       resetForm();
     } catch (e) {
       console.error(e);

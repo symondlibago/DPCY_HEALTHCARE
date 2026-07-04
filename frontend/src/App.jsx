@@ -13,7 +13,8 @@ import {
   Users,
   LogOut,
   Stethoscope,
-  Settings as SettingsIcon
+  Settings as SettingsIcon,
+  Clock
 } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
 import logo from './assets/logo2.png'
@@ -27,6 +28,7 @@ import TransactionHistory from './components/TransactionHistory'
 import Expenses from './components/Expenses'
 import Services from './components/Services'
 import Employee from './components/Employee'
+import Shifts from './components/Shifts'
 import Settings from './components/Settings'
 import LoginPage from './components/LoginPage'
 import { logout, isAuthenticated, getUser } from './utils/auth'
@@ -39,6 +41,7 @@ const navigationItems = [
   { path: '/expenses', icon: Wallet, label: 'Daily Expenses', color: 'text-white', roles: ['admin', 'staff', 'super_admin'] },
   { path: '/services', icon: Stethoscope, label: 'Services', color: 'text-white', roles: ['admin', 'staff', 'super_admin'] },
   { path: '/employees', icon: Users, label: 'Employee Management', color: 'text-white', roles: ['super_admin'] },
+  { path: '/shifts', icon: Clock, label: 'Start Shift / End Shift', color: 'text-white', roles: ['admin', 'super_admin'] },
   { path: '/settings', icon: SettingsIcon, label: 'Settings', color: 'text-white', roles: ['admin', 'staff', 'super_admin'] },
   ]
 
@@ -264,6 +267,7 @@ function MainContent({ sidebarCollapsed, onLogout, isMobile, userRole }) {
           <Route path="/expenses" element={<ProtectedComponent component={Expenses} allowedRoles={['admin', 'staff', 'super_admin']} />} />
           <Route path="/services" element={<ProtectedComponent component={Services} allowedRoles={['admin', 'staff', 'super_admin']} />} />
           <Route path="/employees" element={<ProtectedComponent component={Employee} allowedRoles={['super_admin']} />} />
+          <Route path="/shifts" element={<ProtectedComponent component={Shifts} allowedRoles={['admin', 'super_admin']} />} />
           <Route path="/settings" element={<ProtectedComponent component={Settings} allowedRoles={['admin', 'staff', 'super_admin']} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
