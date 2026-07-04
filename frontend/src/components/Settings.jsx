@@ -89,7 +89,7 @@ function SuperAdminSettings() {
       <Card className="border-none shadow-xl rounded-2xl overflow-hidden">
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-20 flex justify-center"><Loader2 className="animate-spin text-indigo-700" /></div>
+            <div className="p-20 flex justify-center"><Loader2 className="animate-spin text-emerald-700" /></div>
           ) : (
             <table className="w-full text-left">
               <thead className="bg-gray-50 border-b">
@@ -102,15 +102,17 @@ function SuperAdminSettings() {
               </thead>
               <tbody className="divide-y">
                 {filtered.map((u) => (
-                  <tr key={u.id} className="hover:bg-indigo-50/30">
+                  <tr key={u.id} className="hover:bg-emerald-50/30">
                     <td className="p-5 font-bold text-gray-900">{u.name}</td>
                     <td className="p-5 text-sm text-gray-600">{u.email}</td>
                     <td className="p-5">
-                      <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-100 text-indigo-700">{u.role}</span>
+                      <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold capitalize ${u.role === 'super_admin' ? 'bg-purple-100 text-purple-700' : u.role === 'admin' ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-600'}`}>
+                        {u.role?.replace('_', ' ')}
+                      </span>
                     </td>
                     <td className="p-5 text-right">
-                      <Button onClick={() => openReset(u)} variant="ghost" size="sm" className="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg">
-                        <KeyRound className="h-4 w-4 mr-1" /> Reset Password
+                      <Button onClick={() => openReset(u)} size="sm" className="bg-emerald-700 text-white hover:bg-emerald-800 rounded-lg shadow-sm">
+                        <KeyRound className="h-4 w-4 mr-1.5" /> Reset Password
                       </Button>
                     </td>
                   </tr>
@@ -147,7 +149,7 @@ function SuperAdminSettings() {
               </div>
               <div className="p-5 border-t flex gap-2">
                 <Button onClick={closeModal} variant="outline" className="flex-1 rounded-xl">Cancel</Button>
-                <Button onClick={handleSave} disabled={saving} className="flex-1 bg-indigo-700 hover:bg-indigo-800 rounded-xl">
+                <Button onClick={handleSave} disabled={saving} className="flex-1 bg-emerald-700 hover:bg-emerald-800 rounded-xl">
                   {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Save
                 </Button>
               </div>
@@ -203,8 +205,8 @@ function SelfServiceSettings({ user }) {
         className="w-full flex items-center justify-between gap-3 px-5 py-4 bg-white rounded-2xl shadow-sm border border-gray-100 hover:bg-gray-50 transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="h-9 w-9 rounded-full bg-indigo-100 flex items-center justify-center">
-            <Lock className="h-4 w-4 text-indigo-700" />
+          <div className="h-9 w-9 rounded-full bg-emerald-100 flex items-center justify-center">
+            <Lock className="h-4 w-4 text-emerald-700" />
           </div>
           <span className="font-bold text-gray-900">Password and Security</span>
         </div>
@@ -242,7 +244,7 @@ function SelfServiceSettings({ user }) {
                   <input type="password" className="px-4 py-2.5 w-full border border-gray-300 rounded-xl text-sm" value={form.password_confirmation} onChange={(e) => setForm({ ...form, password_confirmation: e.target.value })} placeholder="Re-enter new password" />
                 </div>
 
-                <Button onClick={handleSave} disabled={saving} className="w-full bg-indigo-700 hover:bg-indigo-800 rounded-xl">
+                <Button onClick={handleSave} disabled={saving} className="w-full bg-emerald-700 hover:bg-emerald-800 rounded-xl">
                   {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Update Password
                 </Button>
               </CardContent>

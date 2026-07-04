@@ -175,7 +175,7 @@ export default function Receipts() {
                   <div className="flex gap-2">
                     {sexOptions.map((s) => (
                       <button key={s} onClick={() => setPatient({ ...patient, sex: patient.sex === s ? '' : s })}
-                        className={`flex-1 py-2.5 rounded-xl text-sm font-medium border transition ${patient.sex === s ? 'bg-indigo-700 text-white border-indigo-700' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}>
+                        className={`flex-1 py-2.5 rounded-xl text-sm font-medium border transition ${patient.sex === s ? 'bg-emerald-700 text-white border-emerald-700' : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}>
                         {s}
                       </button>
                     ))}
@@ -204,17 +204,17 @@ export default function Receipts() {
                 </div>
               </div>
               {loading ? (
-                <div className="py-12 flex justify-center"><Loader2 className="animate-spin text-indigo-700" /></div>
+                <div className="py-12 flex justify-center"><Loader2 className="animate-spin text-emerald-700" /></div>
               ) : (
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {filteredServices.map((svc) => (
                     <button key={svc.id} onClick={() => addService(svc)}
-                      className="text-left p-3 rounded-xl border border-gray-200 hover:border-indigo-500 hover:bg-indigo-50/40 transition group">
+                      className="text-left p-3 rounded-xl border border-gray-200 hover:border-emerald-500 hover:bg-emerald-50/40 transition group">
                       <div className="flex items-start justify-between gap-2">
                         <span className="text-sm font-semibold text-gray-800 leading-snug">{svc.name}</span>
-                        <Plus className="h-4 w-4 text-gray-300 group-hover:text-indigo-600 shrink-0" />
+                        <Plus className="h-4 w-4 text-gray-300 group-hover:text-emerald-600 shrink-0" />
                       </div>
-                      <span className="text-xs font-bold text-indigo-700">{peso(svc.price)}</span>
+                      <span className="text-xs font-bold text-emerald-700">{peso(svc.price)}</span>
                     </button>
                   ))}
                   {filteredServices.length === 0 && (
@@ -231,7 +231,7 @@ export default function Receipts() {
           <Card className="border-none shadow-xl rounded-2xl sticky top-6">
             <CardContent className="p-6 space-y-4">
               <h2 className="text-sm font-bold text-gray-500 uppercase tracking-wide flex items-center gap-2">
-                <ReceiptIcon className="h-4 w-4 text-indigo-700" /> Receipt
+                <ReceiptIcon className="h-4 w-4 text-emerald-700" /> Receipt
               </h2>
 
               {items.length === 0 ? (
@@ -273,7 +273,7 @@ export default function Receipts() {
                   </div>
                 </div>
                 <div className="flex justify-between text-lg font-extrabold text-gray-900 pt-1">
-                  <span>Total</span><span className="text-indigo-700">{peso(total)}</span>
+                  <span>Total</span><span className="text-emerald-700">{peso(total)}</span>
                 </div>
                 <div className="flex justify-between items-center text-sm text-gray-600">
                   <span>Tendered</span>
@@ -290,7 +290,7 @@ export default function Receipts() {
               </div>
 
               <div className="space-y-2 pt-2">
-                <Button onClick={() => handleSave(true)} disabled={saving} className="w-full bg-indigo-700 hover:bg-indigo-800 h-11 rounded-xl">
+                <Button onClick={() => handleSave(true)} disabled={saving} className="w-full bg-emerald-700 hover:bg-emerald-800 h-11 rounded-xl">
                   {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Printer className="h-4 w-4 mr-2" />}
                   Save &amp; Print Receipt
                 </Button>

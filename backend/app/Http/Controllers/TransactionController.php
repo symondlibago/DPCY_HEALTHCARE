@@ -17,7 +17,9 @@ class TransactionController extends Controller
         $query = Transaction::query();
 
         if ($request->filled('date')) {
-            $query->whereDate('transaction_date', $request->date);
+            // transaction_date is a DATE column; plain equality uses the index
+            // (whereDate() wraps it in DATE() and prevents index usage).
+            $query->where('transaction_date', $request->date);
         }
 
         if ($request->filled('from') && $request->filled('to')) {

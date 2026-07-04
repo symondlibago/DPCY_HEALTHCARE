@@ -14,7 +14,7 @@ return [
 
     'exposed_headers' => [],
 
-    'max_age' => 0,
+    'max_age' => 86400, // cache CORS preflight for 24h so the browser stops re-sending OPTIONS before every request
 
     'supports_credentials' => true,
 

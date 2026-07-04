@@ -4,6 +4,7 @@ import { Plus, Loader2, Edit2, Trash2, X, Search, Stethoscope } from 'lucide-rea
 import { Button } from '@/components/ui/button.jsx';
 import { Card, CardContent } from '@/components/ui/card.jsx';
 import { getServices, createService, updateService, deleteService } from '../utils/auth';
+import { SearchableSelect } from './CustomInputs';
 
 const peso = (n) =>
   `₱${Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -75,7 +76,7 @@ export default function Services() {
           <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Services</h1>
           <p className="text-gray-500 mt-1">Manage the offered services and their fees.</p>
         </div>
-        <Button onClick={openAdd} className="bg-indigo-700 hover:bg-indigo-800 h-12 rounded-xl px-6"><Plus className="mr-2" /> Add Service</Button>
+        <Button onClick={openAdd} className="bg-emerald-700 hover:bg-emerald-800 h-12 rounded-xl px-6"><Plus className="mr-2" /> Add Service</Button>
       </div>
 
       <div className="relative max-w-sm">
@@ -86,7 +87,7 @@ export default function Services() {
       <Card className="border-none shadow-xl rounded-2xl overflow-hidden">
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-20 flex justify-center"><Loader2 className="animate-spin text-indigo-700" /></div>
+            <div className="p-20 flex justify-center"><Loader2 className="animate-spin text-emerald-700" /></div>
           ) : (
             <table className="w-full text-left">
               <thead className="bg-gray-50 border-b">
@@ -100,18 +101,18 @@ export default function Services() {
               </thead>
               <tbody className="divide-y">
                 {filtered.map((s) => (
-                  <tr key={s.id} className="hover:bg-indigo-50/30">
-                    <td className="p-5 font-bold text-gray-900 flex items-center gap-2"><Stethoscope className="h-4 w-4 text-indigo-300" />{s.name}</td>
+                  <tr key={s.id} className="hover:bg-emerald-50/30">
+                    <td className="p-5 font-bold text-gray-900 flex items-center gap-2"><Stethoscope className="h-4 w-4 text-emerald-300" />{s.name}</td>
                     <td className="p-5 text-sm text-gray-600">{s.category || '—'}</td>
                     <td className="p-5">
                       <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${s.is_active ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
                         {s.is_active ? 'Active' : 'Inactive'}
                       </span>
                     </td>
-                    <td className="p-5 text-right font-bold text-indigo-700">{peso(s.price)}</td>
+                    <td className="p-5 text-right font-bold text-emerald-700">{peso(s.price)}</td>
                     <td className="p-5 text-right">
                       <div className="flex justify-end gap-2">
-                        <Button onClick={() => openEdit(s)} variant="ghost" size="sm" className="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg"><Edit2 className="h-4 w-4" /></Button>
+                        <Button onClick={() => openEdit(s)} variant="ghost" size="sm" className="text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg"><Edit2 className="h-4 w-4" /></Button>
                         <Button onClick={() => handleDelete(s.id)} variant="ghost" size="sm" className="text-red-600 bg-red-50 hover:bg-red-100 rounded-lg"><Trash2 className="h-4 w-4" /></Button>
                       </div>
                     </td>
@@ -148,20 +149,22 @@ export default function Services() {
                   </div>
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Category</label>
-                    <select className="px-3 py-2.5 w-full border border-gray-300 rounded-xl text-sm bg-white" value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
-                      <option value="">— Select —</option>
-                      {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
-                    </select>
+                    <SearchableSelect
+                      options={[{ label: '— Select —', value: '' }, ...CATEGORIES.map((c) => ({ label: c, value: c }))]}
+                      value={form.category}
+                      onChange={(v) => setForm({ ...form, category: v })}
+                      placeholder="— Select —"
+                    />
                   </div>
                 </div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-indigo-600" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
-                  <span className="text-sm text-gray-700">Active (available for new receipts)</span>
+                <label className="flex items-center gap-2.5 cursor-pointer pt-1">
+                  <input type="checkbox" className="h-4 w-4 shrink-0 rounded border-gray-300 text-emerald-600" checked={form.is_active} onChange={(e) => setForm({ ...form, is_active: e.target.checked })} />
+                  <span className="text-sm text-gray-700 whitespace-nowrap">Active (available for new receipts)</span>
                 </label>
               </div>
               <div className="p-5 border-t flex gap-2">
                 <Button onClick={() => setModalOpen(false)} variant="outline" className="flex-1 rounded-xl">Cancel</Button>
-                <Button onClick={handleSave} disabled={saving} className="flex-1 bg-indigo-700 hover:bg-indigo-800 rounded-xl">
+                <Button onClick={handleSave} disabled={saving} className="flex-1 bg-emerald-700 hover:bg-emerald-800 rounded-xl">
                   {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Save
                 </Button>
               </div>

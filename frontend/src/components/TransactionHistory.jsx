@@ -19,20 +19,24 @@ const todayStr = () => {
 export default function TransactionHistory() {
   const [transactions, setTransactions] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [date, setDate] = useState(todayStr());
+  const [fromDate, setFromDate] = useState(todayStr());
+  const [toDate, setToDate] = useState(todayStr());
   const [search, setSearch] = useState('');
   const [viewTx, setViewTx] = useState(null);
 
   const fetchData = async () => {
     setLoading(true);
     try {
-      setTransactions(await getTransactions(`?date=${date}`));
+      // Guard against an inverted range (from later than to)
+      const from = fromDate <= toDate ? fromDate : toDate;
+      const to = fromDate <= toDate ? toDate : fromDate;
+      setTransactions(await getTransactions(`?from=${from}&to=${to}`));
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchData(); /* eslint-disable-next-line */ }, [date]);
+  useEffect(() => { fetchData(); /* eslint-disable-next-line */ }, [fromDate, toDate]);
 
   const filtered = useMemo(
     () =>
@@ -69,25 +73,29 @@ export default function TransactionHistory() {
               <p className="text-[11px] font-bold text-gray-500 uppercase">Transactions</p>
               <p className="text-2xl font-extrabold text-gray-900">{filtered.length}</p>
             </div>
-            <ClipboardList className="h-8 w-8 text-indigo-200" />
+            <ClipboardList className="h-8 w-8 text-emerald-200" />
           </CardContent>
         </Card>
         <Card className="border-none shadow-lg rounded-2xl md:col-span-2">
           <CardContent className="p-5 flex items-center justify-between">
             <div>
-              <p className="text-[11px] font-bold text-gray-500 uppercase">Total Revenue (selected day)</p>
-              <p className="text-2xl font-extrabold text-indigo-700">{peso(dayTotal)}</p>
+              <p className="text-[11px] font-bold text-gray-500 uppercase">Total Revenue (selected range)</p>
+              <p className="text-2xl font-extrabold text-emerald-700">{peso(dayTotal)}</p>
             </div>
-            <TrendingUp className="h-8 w-8 text-indigo-200" />
+            <TrendingUp className="h-8 w-8 text-emerald-200" />
           </CardContent>
         </Card>
       </div>
 
       {/* Filters */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
         <div className="space-y-1.5">
-          <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Date</label>
-          <CustomDatePicker value={date} onChange={setDate} />
+          <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">From</label>
+          <CustomDatePicker value={fromDate} onChange={setFromDate} />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">To</label>
+          <CustomDatePicker value={toDate} onChange={setToDate} align="right" />
         </div>
         <div className="md:col-span-2 space-y-1.5">
           <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Search</label>
@@ -101,12 +109,13 @@ export default function TransactionHistory() {
       <Card className="border-none shadow-xl rounded-2xl overflow-hidden">
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-20 flex justify-center"><Loader2 className="animate-spin text-indigo-700" /></div>
+            <div className="p-20 flex justify-center"><Loader2 className="animate-spin text-emerald-700" /></div>
           ) : (
             <table className="w-full text-left">
               <thead className="bg-gray-50 border-b">
                 <tr>
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Receipt No</th>
+                  <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Date</th>
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Patient</th>
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Services</th>
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase text-right">Total</th>
@@ -115,22 +124,23 @@ export default function TransactionHistory() {
               </thead>
               <tbody className="divide-y">
                 {filtered.map((t) => (
-                  <tr key={t.id} className="hover:bg-indigo-50/30">
+                  <tr key={t.id} className="hover:bg-emerald-50/30">
                     <td className="p-5 font-mono text-xs font-bold text-gray-600">{t.receipt_no}</td>
+                    <td className="p-5 text-sm text-gray-600 whitespace-nowrap">{new Date(t.transaction_date).toLocaleDateString('en-PH')}</td>
                     <td className="p-5 font-bold text-gray-900">{t.patient_name}</td>
                     <td className="p-5 text-sm text-gray-600">{(t.items || []).map((i) => i.name).join(', ')}</td>
-                    <td className="p-5 text-right font-bold text-indigo-700">{peso(t.total)}</td>
+                    <td className="p-5 text-right font-bold text-emerald-700">{peso(t.total)}</td>
                     <td className="p-5 text-right">
                       <div className="flex justify-end gap-2">
                         <Button onClick={() => setViewTx(t)} variant="ghost" size="sm" className="text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg"><Eye className="h-4 w-4" /></Button>
-                        <Button onClick={() => generateReceiptPDF(t, { autoPrint: true })} variant="ghost" size="sm" className="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg"><Printer className="h-4 w-4" /></Button>
+                        <Button onClick={() => generateReceiptPDF(t, { autoPrint: true })} variant="ghost" size="sm" className="text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg"><Printer className="h-4 w-4" /></Button>
                         <Button onClick={() => handleDelete(t.id)} variant="ghost" size="sm" className="text-red-600 bg-red-50 hover:bg-red-100 rounded-lg"><Trash2 className="h-4 w-4" /></Button>
                       </div>
                     </td>
                   </tr>
                 ))}
                 {filtered.length === 0 && (
-                  <tr><td colSpan={5} className="p-12 text-center text-sm text-gray-400">No transactions for this day.</td></tr>
+                  <tr><td colSpan={6} className="p-12 text-center text-sm text-gray-400">No transactions for this range.</td></tr>
                 )}
               </tbody>
             </table>
@@ -168,11 +178,11 @@ export default function TransactionHistory() {
                 <div className="border-t pt-3 space-y-1">
                   <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>{peso(viewTx.subtotal)}</span></div>
                   {Number(viewTx.discount) > 0 && <div className="flex justify-between text-gray-600"><span>Discount</span><span>-{peso(viewTx.discount)}</span></div>}
-                  <div className="flex justify-between font-extrabold text-gray-900 text-lg"><span>Total</span><span className="text-indigo-700">{peso(viewTx.total)}</span></div>
+                  <div className="flex justify-between font-extrabold text-gray-900 text-lg"><span>Total</span><span className="text-emerald-700">{peso(viewTx.total)}</span></div>
                 </div>
               </div>
               <div className="p-5 border-t flex gap-2">
-                <Button onClick={() => generateReceiptPDF(viewTx, { autoPrint: true })} className="flex-1 bg-indigo-700 hover:bg-indigo-800 rounded-xl"><Printer className="h-4 w-4 mr-2" /> Print Receipt</Button>
+                <Button onClick={() => generateReceiptPDF(viewTx, { autoPrint: true })} className="flex-1 bg-emerald-700 hover:bg-emerald-800 rounded-xl"><Printer className="h-4 w-4 mr-2" /> Print Receipt</Button>
               </div>
             </motion.div>
           </motion.div>

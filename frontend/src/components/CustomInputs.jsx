@@ -34,7 +34,7 @@ export const SearchableSelect = ({ label, options, value, onChange, placeholder 
           className={`
             w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg 
             flex justify-between items-center cursor-pointer transition-all
-            ${isOpen ? 'ring-2 ring-blue-500/20 border-blue-500' : 'hover:bg-gray-100'}
+            ${isOpen ? 'ring-2 ring-emerald-500/20 border-emerald-500' : 'hover:bg-gray-100'}
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           `}
         >
@@ -57,7 +57,7 @@ export const SearchableSelect = ({ label, options, value, onChange, placeholder 
                   <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
                   <input
                     type="text"
-                    className="w-full pl-7 pr-2 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-blue-500"
+                    className="w-full pl-7 pr-2 py-1.5 text-xs bg-gray-50 border border-gray-200 rounded-md focus:outline-none focus:border-emerald-500"
                     placeholder="Search..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
@@ -78,7 +78,7 @@ export const SearchableSelect = ({ label, options, value, onChange, placeholder 
                       }}
                       className={`
                         px-3 py-2 text-sm cursor-pointer flex justify-between items-center
-                        ${opt.value === value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700 hover:bg-gray-50'}
+                        ${opt.value === value ? 'bg-emerald-50 text-emerald-700 font-medium' : 'text-gray-700 hover:bg-gray-50'}
                       `}
                     >
                       {opt.label}
@@ -156,7 +156,7 @@ export const CustomDatePicker = ({ label, value, onChange, disabled, align = "le
           className={`
             w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg 
             flex items-center gap-2 text-sm text-left transition-all
-            ${isOpen ? 'ring-2 ring-blue-500/20 border-blue-500' : 'hover:bg-gray-100'}
+            ${isOpen ? 'ring-2 ring-emerald-500/20 border-emerald-500' : 'hover:bg-gray-100'}
             ${disabled ? 'opacity-50 cursor-not-allowed' : ''}
           `}
         >
@@ -208,7 +208,7 @@ export const CustomDatePicker = ({ label, value, onChange, disabled, align = "le
                       className={`
                         text-xs py-2 rounded-md transition-colors
                         ${year === currentMonth.getFullYear() 
-                          ? 'bg-blue-600 text-white shadow-sm' 
+                          ? 'bg-emerald-600 text-white shadow-sm' 
                           : 'text-gray-700 hover:bg-gray-100'}
                       `}
                     >
@@ -238,8 +238,8 @@ export const CustomDatePicker = ({ label, value, onChange, disabled, align = "le
                         key={day}
                         onClick={() => handleDateClick(day)}
                         className={`
-                          text-sm p-1.5 rounded-full hover:bg-blue-50 transition-colors
-                          ${isSelected ? 'bg-blue-600 text-white hover:bg-blue-700' : 'text-gray-700'}
+                          text-sm p-1.5 rounded-full hover:bg-emerald-50 transition-colors
+                          ${isSelected ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'text-gray-700'}
                         `}
                       >
                         {day}

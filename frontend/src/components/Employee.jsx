@@ -125,7 +125,7 @@ export default function Employee() {
           <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Employees</h1>
           <p className="text-gray-500 mt-1">Add, edit, and manage staff records.</p>
         </div>
-        <Button onClick={openAdd} className="bg-indigo-700 hover:bg-indigo-800 h-12 rounded-xl px-6"><Plus className="mr-2" /> Add Employee</Button>
+        <Button onClick={openAdd} className="bg-emerald-700 hover:bg-emerald-800 h-12 rounded-xl px-6"><Plus className="mr-2" /> Add Employee</Button>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
@@ -150,7 +150,7 @@ export default function Employee() {
       <Card className="border-none shadow-xl rounded-2xl overflow-hidden">
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-20 flex justify-center"><Loader2 className="animate-spin text-indigo-700" /></div>
+            <div className="p-20 flex justify-center"><Loader2 className="animate-spin text-emerald-700" /></div>
           ) : (
             <table className="w-full text-left">
               <thead className="bg-gray-50 border-b">
@@ -165,14 +165,14 @@ export default function Employee() {
               </thead>
               <tbody className="divide-y">
                 {filtered.map((e) => (
-                  <tr key={e.id} className="hover:bg-indigo-50/30">
+                  <tr key={e.id} className="hover:bg-emerald-50/30">
                     <td className="p-5 font-mono text-xs font-bold text-gray-600">{e.id_number || '—'}</td>
                     <td className="p-5 font-bold text-gray-900">{e.name}</td>
                     <td className="p-5 text-sm text-gray-600">{e.position}</td>
                     <td className="p-5 text-sm text-gray-600">{e.phone_number || e.email || '—'}</td>
                     <td className="p-5">
                       {e.user ? (
-                        <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${e.user.role === 'admin' ? 'bg-indigo-100 text-indigo-700' : 'bg-green-100 text-green-700'}`}>
+                        <span className={`px-2.5 py-1 rounded-full text-[11px] font-bold ${e.user.role === 'admin' ? 'bg-emerald-100 text-emerald-700' : 'bg-green-100 text-green-700'}`}>
                           {e.user.role.charAt(0).toUpperCase() + e.user.role.slice(1)}
                         </span>
                       ) : (
@@ -181,7 +181,7 @@ export default function Employee() {
                     </td>
                     <td className="p-5 text-right">
                       <div className="flex justify-end gap-2">
-                        <Button onClick={() => openEdit(e)} variant="ghost" size="sm" className="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg"><Edit2 className="h-4 w-4" /></Button>
+                        <Button onClick={() => openEdit(e)} variant="ghost" size="sm" className="text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg"><Edit2 className="h-4 w-4" /></Button>
                         <Button onClick={() => handleDelete(e.id)} variant="ghost" size="sm" className="text-red-600 bg-red-50 hover:bg-red-100 rounded-lg"><Trash2 className="h-4 w-4" /></Button>
                       </div>
                     </td>
@@ -236,14 +236,14 @@ export default function Employee() {
                 {form.id && form._linkedUser ? (
                   <div className="md:col-span-2 space-y-1.5">
                     <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Login Account</label>
-                    <span className="inline-block px-2.5 py-1 rounded-full text-[11px] font-bold bg-indigo-100 text-indigo-700">
+                    <span className="inline-block px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700">
                       {form._linkedUser.email} — {form._linkedUser.role}
                     </span>
                   </div>
                 ) : (
                   <div className="md:col-span-2 border-t pt-4 space-y-4">
                     <label className="flex items-center gap-2 cursor-pointer">
-                      <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-indigo-600" checked={form.create_account} onChange={(e) => setForm({ ...form, create_account: e.target.checked })} />
+                      <input type="checkbox" className="h-4 w-4 rounded border-gray-300 text-emerald-600" checked={form.create_account} onChange={(e) => setForm({ ...form, create_account: e.target.checked })} />
                       <span className="text-sm font-bold text-gray-700">Create login account for this employee</span>
                     </label>
                     {form.create_account && (
@@ -274,7 +274,7 @@ export default function Employee() {
               </div>
               <div className="p-5 border-t flex gap-2 sticky bottom-0 bg-white">
                 <Button onClick={() => setModalOpen(false)} variant="outline" className="flex-1 rounded-xl">Cancel</Button>
-                <Button onClick={handleSave} disabled={saving} className="flex-1 bg-indigo-700 hover:bg-indigo-800 rounded-xl">
+                <Button onClick={handleSave} disabled={saving} className="flex-1 bg-emerald-700 hover:bg-emerald-800 rounded-xl">
                   {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Save
                 </Button>
               </div>

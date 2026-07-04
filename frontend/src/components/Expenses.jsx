@@ -22,7 +22,8 @@ const emptyForm = () => ({ id: null, expense_date: todayStr(), category: '', des
 export default function Expenses() {
   const [expenses, setExpenses] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [date, setDate] = useState(todayStr());
+  const [fromDate, setFromDate] = useState(todayStr());
+  const [toDate, setToDate] = useState(todayStr());
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
@@ -30,17 +31,20 @@ export default function Expenses() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      setExpenses(await getExpenses(`?date=${date}`));
+      // Guard against an inverted range (from later than to)
+      const from = fromDate <= toDate ? fromDate : toDate;
+      const to = fromDate <= toDate ? toDate : fromDate;
+      setExpenses(await getExpenses(`?from=${from}&to=${to}`));
     } finally {
       setLoading(false);
     }
   };
 
-  useEffect(() => { fetchData(); /* eslint-disable-next-line */ }, [date]);
+  useEffect(() => { fetchData(); /* eslint-disable-next-line */ }, [fromDate, toDate]);
 
   const dayTotal = useMemo(() => expenses.reduce((s, e) => s + Number(e.amount || 0), 0), [expenses]);
 
-  const openAdd = () => { setForm({ ...emptyForm(), expense_date: date }); setModalOpen(true); };
+  const openAdd = () => { setForm({ ...emptyForm(), expense_date: toDate }); setModalOpen(true); };
   const openEdit = (e) => {
     setForm({ id: e.id, expense_date: e.expense_date?.split('T')[0] || todayStr(), category: e.category || '', description: e.description, amount: e.amount, notes: e.notes || '' });
     setModalOpen(true);
@@ -83,18 +87,22 @@ export default function Expenses() {
           <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Daily Expenses</h1>
           <p className="text-gray-500 mt-1">Record and monitor the center's expenses per day.</p>
         </div>
-        <Button onClick={openAdd} className="bg-indigo-700 hover:bg-indigo-800 h-12 rounded-xl px-6"><Plus className="mr-2" /> Add Expense</Button>
+        <Button onClick={openAdd} className="bg-emerald-700 hover:bg-emerald-800 h-12 rounded-xl px-6"><Plus className="mr-2" /> Add Expense</Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        <div className="space-y-1.5 md:col-span-1">
-          <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Date</label>
-          <CustomDatePicker value={date} onChange={setDate} />
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">From</label>
+          <CustomDatePicker value={fromDate} onChange={setFromDate} />
+        </div>
+        <div className="space-y-1.5">
+          <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">To</label>
+          <CustomDatePicker value={toDate} onChange={setToDate} align="right" />
         </div>
         <Card className="border-none shadow-lg rounded-2xl md:col-span-2">
           <CardContent className="p-5 flex items-center justify-between h-full">
             <div>
-              <p className="text-[11px] font-bold text-gray-500 uppercase">Total Expenses (selected day)</p>
+              <p className="text-[11px] font-bold text-gray-500 uppercase">Total Expenses (selected range)</p>
               <p className="text-2xl font-extrabold text-red-600">{peso(dayTotal)}</p>
             </div>
             <Wallet className="h-8 w-8 text-red-200" />
@@ -105,11 +113,12 @@ export default function Expenses() {
       <Card className="border-none shadow-xl rounded-2xl overflow-hidden">
         <CardContent className="p-0">
           {loading ? (
-            <div className="p-20 flex justify-center"><Loader2 className="animate-spin text-indigo-700" /></div>
+            <div className="p-20 flex justify-center"><Loader2 className="animate-spin text-emerald-700" /></div>
           ) : (
             <table className="w-full text-left">
               <thead className="bg-gray-50 border-b">
                 <tr>
+                  <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Date</th>
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Description</th>
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Category</th>
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Notes</th>
@@ -119,21 +128,22 @@ export default function Expenses() {
               </thead>
               <tbody className="divide-y">
                 {expenses.map((e) => (
-                  <tr key={e.id} className="hover:bg-indigo-50/30">
+                  <tr key={e.id} className="hover:bg-emerald-50/30">
+                    <td className="p-5 text-sm text-gray-600 whitespace-nowrap">{new Date(e.expense_date).toLocaleDateString('en-PH')}</td>
                     <td className="p-5 font-bold text-gray-900">{e.description}</td>
                     <td className="p-5 text-sm text-gray-600">{e.category || '—'}</td>
                     <td className="p-5 text-sm text-gray-500">{e.notes || '—'}</td>
                     <td className="p-5 text-right font-bold text-red-600">{peso(e.amount)}</td>
                     <td className="p-5 text-right">
                       <div className="flex justify-end gap-2">
-                        <Button onClick={() => openEdit(e)} variant="ghost" size="sm" className="text-indigo-600 bg-indigo-50 hover:bg-indigo-100 rounded-lg"><Edit2 className="h-4 w-4" /></Button>
+                        <Button onClick={() => openEdit(e)} variant="ghost" size="sm" className="text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg"><Edit2 className="h-4 w-4" /></Button>
                         <Button onClick={() => handleDelete(e.id)} variant="ghost" size="sm" className="text-red-600 bg-red-50 hover:bg-red-100 rounded-lg"><Trash2 className="h-4 w-4" /></Button>
                       </div>
                     </td>
                   </tr>
                 ))}
                 {expenses.length === 0 && (
-                  <tr><td colSpan={5} className="p-12 text-center text-sm text-gray-400">No expenses recorded for this day.</td></tr>
+                  <tr><td colSpan={6} className="p-12 text-center text-sm text-gray-400">No expenses recorded for this range.</td></tr>
                 )}
               </tbody>
             </table>
@@ -180,7 +190,7 @@ export default function Expenses() {
               </div>
               <div className="p-5 border-t flex gap-2">
                 <Button onClick={() => setModalOpen(false)} variant="outline" className="flex-1 rounded-xl">Cancel</Button>
-                <Button onClick={handleSave} disabled={saving} className="flex-1 bg-indigo-700 hover:bg-indigo-800 rounded-xl">
+                <Button onClick={handleSave} disabled={saving} className="flex-1 bg-emerald-700 hover:bg-emerald-800 rounded-xl">
                   {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null} Save
                 </Button>
               </div>

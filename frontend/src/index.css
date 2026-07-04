@@ -1,0 +1,25 @@
+/* Global interaction defaults */
+
+/* Tailwind v4 / modern browsers no longer set cursor:pointer on buttons
+   automatically. Restore pointer cursors for all interactive elements. */
+button:not(:disabled),
+[role="button"]:not([aria-disabled="true"]),
+a[href],
+label:has(input[type="checkbox"]),
+label:has(input[type="radio"]),
+select:not(:disabled),
+summary,
+input[type="checkbox"]:not(:disabled),
+input[type="radio"]:not(:disabled),
+input[type="submit"]:not(:disabled),
+input[type="button"]:not(:disabled),
+.cursor-pointer {
+  cursor: pointer;
+}
+
+button:disabled,
+[aria-disabled="true"],
+select:disabled,
+input:disabled {
+  cursor: not-allowed;
+}

@@ -16,7 +16,8 @@ class ExpenseController extends Controller
         $query = Expense::query();
 
         if ($request->filled('date')) {
-            $query->whereDate('expense_date', $request->date);
+            // expense_date is a DATE column; plain equality uses the index.
+            $query->where('expense_date', $request->date);
         }
 
         if ($request->filled('from') && $request->filled('to')) {

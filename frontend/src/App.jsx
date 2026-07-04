@@ -58,47 +58,35 @@ function Sidebar({ isCollapsed, toggleSidebar, onLogout, isMobile, closeMobileSi
       className="fixed left-0 top-0 h-full bg-[var(--color-sidebar)] border-r border-[var(--color-sidebar-border)] z-50 flex flex-col"
     >
       {/* Header with toggle button */}
-      <div className="p-4 border-b border-[var(--color-sidebar-border)] bg-white">
-        <div className="flex items-center justify-between h-10">
-          <AnimatePresence mode="wait">
-            {(!isCollapsed || isMobile) && (
-              <motion.img
-                key="sidebar-logo"
-                src={logo}
-                alt="DPCY Healthcare"
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.2 }}
-                className="h-10 w-auto max-w-[160px] object-contain"
-              />
-            )}
-          </AnimatePresence>
-
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={toggleSidebar}
-            className="text-gray-600 hover:bg-gray-100 ml-auto"
-          >
-            {isCollapsed && !isMobile ? (
-              <ChevronRight className="h-5 w-5" />
-            ) : (
+      <div className="border-b border-[var(--color-sidebar-border)] bg-white">
+        {(!isCollapsed || isMobile) ? (
+          <div className="flex items-center justify-between gap-2 px-4 py-3 min-h-[76px]">
+            <img
+              src={logo}
+              alt="DPCY Healthcare"
+              className="h-14 w-auto max-w-[220px] object-contain"
+            />
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSidebar}
+              className="text-gray-500 hover:bg-emerald-50 hover:text-emerald-700 shrink-0 self-start rounded-lg transition-colors"
+            >
               <ChevronLeft className="h-5 w-5" />
-            )}
-          </Button>
-        </div>
-
-        {isCollapsed && !isMobile && (
-          <motion.div
-            key="sidebar-logo-collapsed"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.2 }}
-            className="flex justify-center mt-2"
-          >
-            <img src={circlelogo} alt="DPCY Healthcare" className="h-10 w-10 object-contain" />
-          </motion.div>
+            </Button>
+          </div>
+        ) : (
+          <div className="flex flex-col items-center gap-2 py-3 h-auto">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleSidebar}
+              className="text-gray-500 hover:bg-emerald-50 hover:text-emerald-700 h-8 w-8 rounded-lg transition-colors"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+            <img src={circlelogo} alt="DPCY Healthcare" className="h-12 w-12 object-contain" />
+          </div>
         )}
       </div>
 
@@ -121,13 +109,13 @@ function Sidebar({ isCollapsed, toggleSidebar, onLogout, isMobile, closeMobileSi
                   whileTap={{ scale: 0.98 }}
                   className={`flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 group relative ${
                   isActive
-                    ? 'bg-white text-[#0e1048] border border-[#0e1048]'
+                    ? 'bg-white text-[#064e3b] border border-[#064e3b]'
                     : 'hover:bg-[var(--color-sidebar-accent)]/50 text-white'
                 }`}
 
                 >
 
-                <Icon className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-[#0e1048]' : item.color}`} />
+                <Icon className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-[#064e3b]' : item.color}`} />
 
                   <AnimatePresence mode="wait">
                     {(!isCollapsed || isMobile) && (
@@ -136,7 +124,7 @@ function Sidebar({ isCollapsed, toggleSidebar, onLogout, isMobile, closeMobileSi
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -10 }}
                         transition={{ duration: 0.2 }}
-                        className={`font-medium whitespace-nowrap ${isActive ? 'text-[#0e1048]' : 'text-[var(--color-sidebar-foreground)]'}`}
+                        className={`font-medium whitespace-nowrap ${isActive ? 'text-[#064e3b]' : 'text-[var(--color-sidebar-foreground)]'}`}
                       >
                         {item.label}
                       </motion.span>
@@ -147,7 +135,7 @@ function Sidebar({ isCollapsed, toggleSidebar, onLogout, isMobile, closeMobileSi
                   {isActive && (
                   <motion.div
                     layoutId="activeIndicator"
-                    className={`absolute right-2 w-2 h-2 rounded-full bg-[#0e1048]`}
+                    className={`absolute right-2 w-2 h-2 rounded-full bg-[#064e3b]`}
                   />
                 )}
 
@@ -351,7 +339,7 @@ function App() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[var(--color-background)]">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-emerald-600"></div>
       </div>
     )
   }
