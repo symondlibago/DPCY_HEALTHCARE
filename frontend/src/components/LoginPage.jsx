@@ -4,6 +4,7 @@ import { Eye, EyeOff, Lock, User, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import API_BASE_URL from './Config'
+import logo from '../assets/logo2.png'
 
 const LoginPage = ({ onLogin }) => {
   const [email, setEmail] = useState('')
@@ -91,17 +92,9 @@ const LoginPage = ({ onLogin }) => {
               initial={{ opacity: 0, scale: 0.9 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ delay: 0.2, duration: 0.5 }}
-              className="text-center mb-8"
+              className="flex justify-center mb-3"
             >
-              <div className="mb-6 relative inline-block">
-                <div className="absolute inset-0 bg-blue-500/20 rounded-full blur-xl transform scale-110"></div>
-              </div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-2 tracking-tight">
-                DPCY Healthcare
-              </h1>
-              <p className="text-gray-500 text-sm">
-                Diagnostic &amp; Drug Testing Center
-              </p>
+              <img src={logo} alt="DPCY Healthcare - Diagnostic & Drug Testing Center" className="h-24 w-auto max-w-[340px] object-contain" />
             </motion.div>
 
             {/* Error Message */}

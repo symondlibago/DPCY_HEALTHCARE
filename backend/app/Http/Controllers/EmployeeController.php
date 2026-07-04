@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Employee;
+use App\Models\User;
 
 class EmployeeController extends Controller
 {
     public function index()
     {
-        $employees = Employee::orderBy('created_at', 'desc')->get();
+        $employees = Employee::with('user:id,name,email,role')->orderBy('created_at', 'desc')->get();
         return response()->json(['success' => true, 'data' => $employees]);
     }
 
@@ -21,8 +24,22 @@ class EmployeeController extends Controller
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
-        $employee = Employee::create($validator->validated());
-        return response()->json(['success' => true, 'data' => $employee], 201);
+        if ($request->boolean('create_account')) {
+            $accountErrors = $this->validateAccount($request);
+            if ($accountErrors) {
+                return response()->json(['success' => false, 'errors' => $accountErrors], 422);
+            }
+
+            $employee = DB::transaction(function () use ($validator, $request) {
+                $employee = Employee::create($validator->validated());
+                $this->createAccount($request, $employee);
+                return $employee;
+            });
+        } else {
+            $employee = Employee::create($validator->validated());
+        }
+
+        return response()->json(['success' => true, 'data' => $employee->load('user:id,name,email,role')], 201);
     }
 
     public function show($id)
@@ -46,8 +63,21 @@ class EmployeeController extends Controller
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
         }
 
-        $employee->update($validator->validated());
-        return response()->json(['success' => true, 'data' => $employee]);
+        if (!$employee->user_id && $request->boolean('create_account')) {
+            $accountErrors = $this->validateAccount($request);
+            if ($accountErrors) {
+                return response()->json(['success' => false, 'errors' => $accountErrors], 422);
+            }
+
+            DB::transaction(function () use ($employee, $validator, $request) {
+                $employee->update($validator->validated());
+                $this->createAccount($request, $employee);
+            });
+        } else {
+            $employee->update($validator->validated());
+        }
+
+        return response()->json(['success' => true, 'data' => $employee->load('user:id,name,email,role')]);
     }
 
     public function destroy($id)
@@ -58,6 +88,29 @@ class EmployeeController extends Controller
         }
         $employee->delete();
         return response()->json(['success' => true, 'message' => 'Employee deleted successfully']);
+    }
+
+    private function validateAccount(Request $request)
+    {
+        $accountValidator = Validator::make($request->all(), [
+            'username' => 'required|email|unique:users,email',
+            'password' => 'required|string|min:8|confirmed',
+            'role' => 'required|in:staff,admin',
+        ]);
+
+        return $accountValidator->fails() ? $accountValidator->errors() : null;
+    }
+
+    private function createAccount(Request $request, Employee $employee)
+    {
+        $user = User::create([
+            'name' => $employee->name,
+            'email' => $request->username,
+            'password' => Hash::make($request->password),
+            'role' => $request->role,
+        ]);
+
+        $employee->update(['user_id' => $user->id]);
     }
 
     private function validator(Request $request, bool $partial = false)
@@ -75,7 +128,6 @@ class EmployeeController extends Controller
             'email' => 'nullable|email|max:255',
             'address' => 'nullable|string',
             'date_hired' => 'nullable|date',
-            'status' => 'nullable|in:Active,Inactive',
             'notes' => 'nullable|string',
         ]);
     }

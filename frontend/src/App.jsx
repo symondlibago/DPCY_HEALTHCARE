@@ -12,9 +12,12 @@ import {
   ChevronRight,
   Users,
   LogOut,
-  Stethoscope
+  Stethoscope,
+  Settings as SettingsIcon
 } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
+import logo from './assets/logo2.png'
+import circlelogo from './assets/circlelogo.png'
 import './App.css'
 
 // Import components
@@ -24,17 +27,19 @@ import TransactionHistory from './components/TransactionHistory'
 import Expenses from './components/Expenses'
 import Services from './components/Services'
 import Employee from './components/Employee'
+import Settings from './components/Settings'
 import LoginPage from './components/LoginPage'
 import { logout, isAuthenticated, getUser } from './utils/auth'
 
 // Navigation items with role-based access
 const navigationItems = [
-  { path: '/', icon: Home, label: 'Dashboard', color: 'text-white', roles: ['admin'] },
-  { path: '/receipts', icon: Receipt, label: 'New Receipt', color: 'text-white', roles: ['admin'] },
-  { path: '/transactions', icon: ClipboardList, label: 'Transaction History', color: 'text-white', roles: ['admin'] },
-  { path: '/expenses', icon: Wallet, label: 'Daily Expenses', color: 'text-white', roles: ['admin'] },
-  { path: '/services', icon: Stethoscope, label: 'Services', color: 'text-white', roles: ['admin'] },
-  { path: '/employees', icon: Users, label: 'Employee Management', color: 'text-white', roles: ['admin'] },
+  { path: '/', icon: Home, label: 'Dashboard', color: 'text-white', roles: ['admin', 'staff', 'super_admin'] },
+  { path: '/receipts', icon: Receipt, label: 'New Receipt', color: 'text-white', roles: ['admin', 'staff', 'super_admin'] },
+  { path: '/transactions', icon: ClipboardList, label: 'Transaction History', color: 'text-white', roles: ['admin', 'staff', 'super_admin'] },
+  { path: '/expenses', icon: Wallet, label: 'Daily Expenses', color: 'text-white', roles: ['admin', 'staff', 'super_admin'] },
+  { path: '/services', icon: Stethoscope, label: 'Services', color: 'text-white', roles: ['admin', 'staff', 'super_admin'] },
+  { path: '/employees', icon: Users, label: 'Employee Management', color: 'text-white', roles: ['super_admin'] },
+  { path: '/settings', icon: SettingsIcon, label: 'Settings', color: 'text-white', roles: ['admin', 'staff', 'super_admin'] },
   ]
 
 function Sidebar({ isCollapsed, toggleSidebar, onLogout, isMobile, closeMobileSidebar, userRole }) {
@@ -53,33 +58,48 @@ function Sidebar({ isCollapsed, toggleSidebar, onLogout, isMobile, closeMobileSi
       className="fixed left-0 top-0 h-full bg-[var(--color-sidebar)] border-r border-[var(--color-sidebar-border)] z-50 flex flex-col"
     >
       {/* Header with toggle button */}
-      <div className="flex items-center justify-between p-4 border-b border-[var(--color-sidebar-border)] h-16">
-        <AnimatePresence mode="wait">
-          {(!isCollapsed || isMobile) && (
-            <motion.h1
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.2 }}
-              className="text-lg font-bold bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] bg-clip-text text-white"
-            >
-              DPCY Healthcare
-            </motion.h1>
-          )}
-        </AnimatePresence>
+      <div className="p-4 border-b border-[var(--color-sidebar-border)] bg-white">
+        <div className="flex items-center justify-between h-10">
+          <AnimatePresence mode="wait">
+            {(!isCollapsed || isMobile) && (
+              <motion.img
+                key="sidebar-logo"
+                src={logo}
+                alt="DPCY Healthcare"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.2 }}
+                className="h-10 w-auto max-w-[160px] object-contain"
+              />
+            )}
+          </AnimatePresence>
 
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={toggleSidebar}
-          className="text-[var(--color-sidebar-foreground)] hover:bg-[var(--color-sidebar-accent)] ml-auto"
-        >
-          {isCollapsed && !isMobile ? (
-            <ChevronRight className="h-5 w-5" />
-          ) : (
-            <ChevronLeft className="h-5 w-5" />
-          )}
-        </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={toggleSidebar}
+            className="text-gray-600 hover:bg-gray-100 ml-auto"
+          >
+            {isCollapsed && !isMobile ? (
+              <ChevronRight className="h-5 w-5" />
+            ) : (
+              <ChevronLeft className="h-5 w-5" />
+            )}
+          </Button>
+        </div>
+
+        {isCollapsed && !isMobile && (
+          <motion.div
+            key="sidebar-logo-collapsed"
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.2 }}
+            className="flex justify-center mt-2"
+          >
+            <img src={circlelogo} alt="DPCY Healthcare" className="h-10 w-10 object-contain" />
+          </motion.div>
+        )}
       </div>
 
       {/* Navigation items */}
@@ -148,7 +168,7 @@ function Sidebar({ isCollapsed, toggleSidebar, onLogout, isMobile, closeMobileSi
 <div className="p-2 border-t border-[var(--color-sidebar-border)]">
   <motion.button
     whileHover={{ scale: 1.02, x: 2 }}
-    whileTap={{ scale: 0.98 }}
+    whileTap={{ scale: 0.96, boxShadow: '0 0 0 4px rgba(239, 68, 68, 0.35)' }}
     onClick={onLogout}
     className="relative flex items-center space-x-3 p-3 rounded-lg transition-all duration-200 group w-full hover:bg-[var(--color-destructive)]/20 text-white"
   >
@@ -250,12 +270,13 @@ function MainContent({ sidebarCollapsed, onLogout, isMobile, userRole }) {
       >
         <Routes>
           {/* Admin routes */}
-          <Route path="/" element={<ProtectedComponent component={Dashboard} allowedRoles={['admin']} />} />
-          <Route path="/receipts" element={<ProtectedComponent component={Receipts} allowedRoles={['admin']} />} />
-          <Route path="/transactions" element={<ProtectedComponent component={TransactionHistory} allowedRoles={['admin']} />} />
-          <Route path="/expenses" element={<ProtectedComponent component={Expenses} allowedRoles={['admin']} />} />
-          <Route path="/services" element={<ProtectedComponent component={Services} allowedRoles={['admin']} />} />
-          <Route path="/employees" element={<ProtectedComponent component={Employee} allowedRoles={['admin']} />} />
+          <Route path="/" element={<ProtectedComponent component={Dashboard} allowedRoles={['admin', 'staff', 'super_admin']} />} />
+          <Route path="/receipts" element={<ProtectedComponent component={Receipts} allowedRoles={['admin', 'staff', 'super_admin']} />} />
+          <Route path="/transactions" element={<ProtectedComponent component={TransactionHistory} allowedRoles={['admin', 'staff', 'super_admin']} />} />
+          <Route path="/expenses" element={<ProtectedComponent component={Expenses} allowedRoles={['admin', 'staff', 'super_admin']} />} />
+          <Route path="/services" element={<ProtectedComponent component={Services} allowedRoles={['admin', 'staff', 'super_admin']} />} />
+          <Route path="/employees" element={<ProtectedComponent component={Employee} allowedRoles={['super_admin']} />} />
+          <Route path="/settings" element={<ProtectedComponent component={Settings} allowedRoles={['admin', 'staff', 'super_admin']} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </motion.div>

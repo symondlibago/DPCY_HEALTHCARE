@@ -88,3 +88,12 @@ export const getExpenses = (params = '') => list('expenses', params);
 export const createExpense = (data) => create('expenses', data);
 export const updateExpense = (id, data) => update('expenses', id, data);
 export const deleteExpense = (id) => remove('expenses', id);
+
+// USERS (super admin only)
+export const getUsers = () => list('users');
+export const resetUserPassword = (id, data) => create(`users/${id}/reset-password`, data);
+
+// SELF-SERVICE PASSWORD CHANGE (any authenticated user)
+export const changeOwnPassword = (data) => authenticatedRequest('/user/change-password', {
+  method: 'POST', body: JSON.stringify(data),
+});

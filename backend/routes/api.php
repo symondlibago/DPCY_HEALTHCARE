@@ -6,6 +6,7 @@ use App\Http\Controllers\EmployeeController;
 use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ExpenseController;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -25,6 +26,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/user/change-password', [AuthController::class, 'changePassword']);
 
     // Services (predefined list of offered services + fees)
     Route::apiResource('services', ServiceController::class);
@@ -35,6 +37,10 @@ Route::middleware('auth:sanctum')->group(function () {
     // Daily expenses
     Route::apiResource('expenses', ExpenseController::class);
 
-    // Employee (staff) management
-    Route::apiResource('employees', EmployeeController::class);
+    // Super admin only: employee (staff) management + user account management
+    Route::middleware('role:super_admin')->group(function () {
+        Route::apiResource('employees', EmployeeController::class);
+        Route::get('/users', [UserController::class, 'index']);
+        Route::post('/users/{user}/reset-password', [UserController::class, 'resetPassword']);
+    });
 });
