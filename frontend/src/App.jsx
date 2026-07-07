@@ -14,7 +14,8 @@ import {
   LogOut,
   Stethoscope,
   Settings as SettingsIcon,
-  Clock
+  Clock,
+  BarChart3
 } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
 import logo from './assets/logo2.png'
@@ -29,6 +30,7 @@ import Expenses from './components/Expenses'
 import Services from './components/Services'
 import Employee from './components/Employee'
 import Shifts from './components/Shifts'
+import SalesReport from './components/SalesReport'
 import Settings from './components/Settings'
 import LoginPage from './components/LoginPage'
 import { logout, isAuthenticated, getUser } from './utils/auth'
@@ -38,6 +40,7 @@ const navigationItems = [
   { path: '/', icon: Home, label: 'Dashboard', color: 'text-white', roles: ['admin', 'staff', 'super_admin'] },
   { path: '/receipts', icon: Receipt, label: 'New Receipt', color: 'text-white', roles: ['admin', 'staff', 'super_admin'] },
   { path: '/transactions', icon: ClipboardList, label: 'Transaction History', color: 'text-white', roles: ['admin', 'staff', 'super_admin'] },
+  { path: '/sales-report', icon: BarChart3, label: 'Sales Report', color: 'text-white', roles: ['admin', 'super_admin'] },
   { path: '/expenses', icon: Wallet, label: 'Daily Expenses', color: 'text-white', roles: ['admin', 'staff', 'super_admin'] },
   { path: '/services', icon: Stethoscope, label: 'Services', color: 'text-white', roles: ['admin', 'staff', 'super_admin'] },
   { path: '/employees', icon: Users, label: 'Employee Management', color: 'text-white', roles: ['super_admin'] },
@@ -264,6 +267,7 @@ function MainContent({ sidebarCollapsed, onLogout, isMobile, userRole }) {
           <Route path="/" element={<ProtectedComponent component={Dashboard} allowedRoles={['admin', 'staff', 'super_admin']} />} />
           <Route path="/receipts" element={<ProtectedComponent component={Receipts} allowedRoles={['admin', 'staff', 'super_admin']} />} />
           <Route path="/transactions" element={<ProtectedComponent component={TransactionHistory} allowedRoles={['admin', 'staff', 'super_admin']} />} />
+          <Route path="/sales-report" element={<ProtectedComponent component={SalesReport} allowedRoles={['admin', 'super_admin']} />} />
           <Route path="/expenses" element={<ProtectedComponent component={Expenses} allowedRoles={['admin', 'staff', 'super_admin']} />} />
           <Route path="/services" element={<ProtectedComponent component={Services} allowedRoles={['admin', 'staff', 'super_admin']} />} />
           <Route path="/employees" element={<ProtectedComponent component={Employee} allowedRoles={['super_admin']} />} />

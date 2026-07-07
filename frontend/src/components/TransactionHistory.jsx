@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Loader2, Search, Printer, Trash2, Eye, X, ClipboardList, TrendingUp } from 'lucide-react';
+import { Loader2, Search, Printer, Trash2, Eye, X, ClipboardList, TrendingUp, FileSpreadsheet, Download } from 'lucide-react';
 import { Button } from '@/components/ui/button.jsx';
 import { Card, CardContent } from '@/components/ui/card.jsx';
 import { getTransactions, deleteTransaction } from '../utils/auth';
 import { CustomDatePicker } from './CustomInputs';
 import { generateReceiptPDF } from './ReceiptPDF';
+import { downloadTransactionExcel, downloadTransactionsExcel } from '../utils/excel';
 
 const peso = (n) =>
   `₱${Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -63,6 +64,13 @@ export default function TransactionHistory() {
           <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Transaction History</h1>
           <p className="text-gray-500 mt-1">Daily record of completed services and issued receipts.</p>
         </div>
+        <Button
+          onClick={() => downloadTransactionsExcel(filtered, `Transactions_${fromDate}_to_${toDate}`)}
+          disabled={filtered.length === 0}
+          className="bg-emerald-700 hover:bg-emerald-800 h-12 rounded-xl px-6"
+        >
+          <Download className="h-4 w-4 mr-2" /> Export to Excel
+        </Button>
       </div>
 
       {/* Summary cards */}
@@ -132,9 +140,10 @@ export default function TransactionHistory() {
                     <td className="p-5 text-right font-bold text-emerald-700">{peso(t.total)}</td>
                     <td className="p-5 text-right">
                       <div className="flex justify-end gap-2">
-                        <Button onClick={() => setViewTx(t)} variant="ghost" size="sm" className="text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg"><Eye className="h-4 w-4" /></Button>
-                        <Button onClick={() => generateReceiptPDF(t, { autoPrint: true })} variant="ghost" size="sm" className="text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg"><Printer className="h-4 w-4" /></Button>
-                        <Button onClick={() => handleDelete(t.id)} variant="ghost" size="sm" className="text-red-600 bg-red-50 hover:bg-red-100 rounded-lg"><Trash2 className="h-4 w-4" /></Button>
+                        <Button onClick={() => setViewTx(t)} variant="ghost" size="sm" className="text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg" title="View"><Eye className="h-4 w-4" /></Button>
+                        <Button onClick={() => generateReceiptPDF(t, { autoPrint: true })} variant="ghost" size="sm" className="text-emerald-600 bg-emerald-50 hover:bg-emerald-100 rounded-lg" title="Print receipt"><Printer className="h-4 w-4" /></Button>
+                        <Button onClick={() => downloadTransactionExcel(t)} variant="ghost" size="sm" className="text-emerald-700 bg-emerald-50 hover:bg-emerald-100 rounded-lg" title="Download Excel"><FileSpreadsheet className="h-4 w-4" /></Button>
+                        <Button onClick={() => handleDelete(t.id)} variant="ghost" size="sm" className="text-red-600 bg-red-50 hover:bg-red-100 rounded-lg" title="Delete"><Trash2 className="h-4 w-4" /></Button>
                       </div>
                     </td>
                   </tr>

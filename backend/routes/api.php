@@ -8,6 +8,7 @@ use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\ShiftController;
+use App\Http\Controllers\ReportController;
 
 /*
 |--------------------------------------------------------------------------
@@ -37,6 +38,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // Daily expenses
     Route::apiResource('expenses', ExpenseController::class);
+
+    // Sales reports (daily/weekly/monthly/yearly): admin + super admin
+    Route::middleware('role:admin,super_admin')->group(function () {
+        Route::get('/reports/sales', [ReportController::class, 'sales']);
+    });
 
     // Employee shift tracking (time in / time out): admin + super admin
     Route::middleware('role:admin,super_admin')->group(function () {

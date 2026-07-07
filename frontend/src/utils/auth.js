@@ -94,6 +94,12 @@ export const getShiftHistory = (params = '') => list('shifts/history', params);
 export const timeInEmployee = (employeeId) => create(`shifts/${employeeId}/time-in`, {});
 export const timeOutEmployee = (employeeId) => create(`shifts/${employeeId}/time-out`, {});
 
+// REPORTS (admin + super admin) — returns the full summary object
+export const getSalesReport = async (params = '') => {
+  const res = await authenticatedRequest(`/reports/sales${params}`);
+  return res.json();
+};
+
 // USERS (super admin only)
 export const getUsers = () => list('users');
 export const resetUserPassword = (id, data) => create(`users/${id}/reset-password`, data);

@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Minus, Trash2, Search, Loader2, Receipt as ReceiptIcon, Printer, X, CheckCircle } from 'lucide-react';
+import { Plus, Minus, Trash2, Search, Loader2, Receipt as ReceiptIcon, Printer, X, CheckCircle, FileSpreadsheet } from 'lucide-react';
 import { Button } from '@/components/ui/button.jsx';
 import { Card, CardContent } from '@/components/ui/card.jsx';
 import { getServices, createTransaction, getUser } from '../utils/auth';
 import { CustomDatePicker } from './CustomInputs';
 import { generateReceiptPDF } from './ReceiptPDF';
+import { downloadTransactionExcel } from '../utils/excel';
 
 const peso = (n) =>
   `₱${Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
@@ -148,6 +149,9 @@ export default function Receipts() {
           <div className="flex items-center gap-2">
             <Button onClick={() => generateReceiptPDF(lastSaved, { autoPrint: true })} size="sm" variant="ghost" className="text-green-700 bg-green-100 hover:bg-green-200 rounded-lg">
               <Printer className="h-4 w-4 mr-1" /> Reprint
+            </Button>
+            <Button onClick={() => downloadTransactionExcel(lastSaved)} size="sm" variant="ghost" className="text-emerald-700 bg-emerald-100 hover:bg-emerald-200 rounded-lg">
+              <FileSpreadsheet className="h-4 w-4 mr-1" /> Excel
             </Button>
             <button onClick={() => setLastSaved(null)} className="text-green-600 hover:text-green-800"><X className="h-4 w-4" /></button>
           </div>
