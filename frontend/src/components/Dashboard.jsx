@@ -9,11 +9,14 @@ import {
   RefreshCw,
   AlertTriangle,
   Stethoscope,
-  Coins
+  Coins,
+  Clock,
+  LogIn,
+  LogOut
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Button } from '@/components/ui/button.jsx'
-import { getTransactions, getExpenses, getServices, getEmployees } from '../utils/auth'
+import { getTransactions, getExpenses, getServices, getShifts, getUser } from '../utils/auth'
 
 const formatCurrency = (amount) =>
   `₱${Number(amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -23,6 +26,9 @@ const todayStr = () => {
   const off = d.getTimezoneOffset()
   return new Date(d.getTime() - off * 60000).toISOString().split('T')[0]
 }
+
+const formatTime = (dateString) =>
+  dateString ? new Date(dateString).toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' }) : null
 
 const formatTimeAgo = (dateString) => {
   if (!dateString) return ''
@@ -35,11 +41,15 @@ const formatTimeAgo = (dateString) => {
 }
 
 function Dashboard() {
+  const userRole = getUser()?.role
+  const canViewEmployees = userRole === 'admin' || userRole === 'super_admin'
+
   const [data, setData] = useState({
     revenue: 0, txCount: 0, expenses: 0, employees: 0, activeServices: 0
   })
   const [recentTx, setRecentTx] = useState([])
   const [recentExp, setRecentExp] = useState([])
+  const [shifts, setShifts] = useState([])
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState(null)
 
@@ -47,11 +57,11 @@ function Dashboard() {
     setLoading(true)
     try {
       const today = todayStr()
-      const [txs, exps, services, employees] = await Promise.all([
+      const [txs, exps, services, shiftRows] = await Promise.all([
         getTransactions(`?date=${today}`),
         getExpenses(`?date=${today}`),
         getServices(),
-        getEmployees()
+        canViewEmployees ? getShifts(`?date=${today}`) : Promise.resolve([])
       ])
 
       const revenue = txs.reduce((s, t) => s + Number(t.total || 0), 0)
@@ -61,22 +71,27 @@ function Dashboard() {
         revenue,
         txCount: txs.length,
         expenses,
-        employees: employees.length,
+        employees: shiftRows.length,
         activeServices: services.filter((s) => s.is_active).length
       })
       setRecentTx(txs.slice(0, 5))
       setRecentExp(exps.slice(0, 5))
+      setShifts(shiftRows)
       setLastUpdated(new Date())
     } catch (e) {
       console.error('Dashboard error:', e)
     } finally {
       setLoading(false)
     }
-  }, [])
+  }, [canViewEmployees])
 
   useEffect(() => { fetchData() }, [fetchData])
 
   const net = data.revenue - data.expenses
+
+  const timedIn = shifts.filter((s) => s.time_in && !s.time_out).length
+  const timedOut = shifts.filter((s) => s.time_out).length
+  const notStarted = shifts.filter((s) => !s.time_in).length
 
   const statsCards = [
     { title: "Today's Revenue", value: formatCurrency(data.revenue), icon: Coins },
@@ -152,7 +167,7 @@ function Dashboard() {
       </div>
 
       {/* Secondary stat row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className={`grid grid-cols-1 gap-6 ${canViewEmployees ? 'md:grid-cols-2' : ''}`}>
         <Card className="bg-[var(--color-card)] border border-[var(--color-border)] shadow-md">
           <CardContent className="p-5 flex items-center justify-between">
             <div>
@@ -162,16 +177,82 @@ function Dashboard() {
             <Stethoscope className="h-8 w-8 text-[var(--color-primary)]/40" />
           </CardContent>
         </Card>
-        <Card className="bg-[var(--color-card)] border border-[var(--color-border)] shadow-md">
-          <CardContent className="p-5 flex items-center justify-between">
-            <div>
-              <p className="text-sm text-[var(--color-foreground)]/60">Employees</p>
-              <p className="text-2xl font-bold text-[var(--color-foreground)]">{data.employees}</p>
-            </div>
-            <Users className="h-8 w-8 text-[var(--color-primary)]/40" />
-          </CardContent>
-        </Card>
+        {canViewEmployees && (
+          <Card className="bg-[var(--color-card)] border border-[var(--color-border)] shadow-md">
+            <CardContent className="p-5 flex items-center justify-between">
+              <div>
+                <p className="text-sm text-[var(--color-foreground)]/60">Employees</p>
+                <p className="text-2xl font-bold text-[var(--color-foreground)]">{data.employees}</p>
+              </div>
+              <Users className="h-8 w-8 text-[var(--color-primary)]/40" />
+            </CardContent>
+          </Card>
+        )}
       </div>
+
+      {/* Employee Shift Monitor */}
+      {canViewEmployees && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
+          <Card className="bg-[var(--color-card)] border border-[var(--color-border)] shadow-md">
+            <CardHeader>
+              <CardTitle className="text-[var(--color-foreground)] flex items-center gap-2">
+                <Clock className="h-5 w-5 text-[var(--color-primary)]" /> Employee Shift Monitor (Today)
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-emerald-700/70">On Shift</p>
+                    <p className="text-xl font-bold text-emerald-900">{timedIn}</p>
+                  </div>
+                  <LogIn className="h-6 w-6 text-emerald-600" />
+                </div>
+                <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-emerald-700/70">Timed Out</p>
+                    <p className="text-xl font-bold text-emerald-900">{timedOut}</p>
+                  </div>
+                  <LogOut className="h-6 w-6 text-emerald-600" />
+                </div>
+                <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-emerald-700/70">Not Started</p>
+                    <p className="text-xl font-bold text-emerald-900">{notStarted}</p>
+                  </div>
+                  <Users className="h-6 w-6 text-emerald-600" />
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="flex items-center justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" /></div>
+              ) : shifts.length > 0 ? (
+                <div className="max-h-64 overflow-y-auto space-y-2">
+                  {shifts.map((s) => (
+                    <div key={s.employee_id} className="flex items-center justify-between text-sm py-1.5 border-b border-[var(--color-border)]/50 last:border-0">
+                      <div>
+                        <p className="text-[var(--color-foreground)] font-medium">{s.name}</p>
+                        <p className="text-xs text-[var(--color-foreground)]/60">{s.position}</p>
+                      </div>
+                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
+                        s.time_out ? 'bg-emerald-100 text-emerald-700'
+                          : s.time_in ? 'bg-amber-100 text-amber-700'
+                          : 'bg-gray-100 text-gray-500'
+                      }`}>
+                        {s.time_out ? `Completed ${formatTime(s.time_in)} – ${formatTime(s.time_out)}${s.auto_closed ? ' (auto 6PM)' : ''}`
+                          : s.time_in ? `On shift since ${formatTime(s.time_in)}`
+                          : 'Not started'}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-4 text-[var(--color-foreground)]/60">No employees found</div>
+              )}
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Main Content Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

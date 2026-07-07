@@ -88,6 +88,12 @@ export const createExpense = (data) => create('expenses', data);
 export const updateExpense = (id, data) => update('expenses', id, data);
 export const deleteExpense = (id) => remove('expenses', id);
 
+// SHIFTS (employee time in / time out, admin + super admin)
+export const getShifts = (params = '') => list('shifts', params);
+export const getShiftHistory = (params = '') => list('shifts/history', params);
+export const timeInEmployee = (employeeId) => create(`shifts/${employeeId}/time-in`, {});
+export const timeOutEmployee = (employeeId) => create(`shifts/${employeeId}/time-out`, {});
+
 // USERS (super admin only)
 export const getUsers = () => list('users');
 export const resetUserPassword = (id, data) => create(`users/${id}/reset-password`, data);

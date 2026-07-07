@@ -1,4 +1,4 @@
-import jsPDF from 'jspdf';
+import { jsPDF } from 'jspdf';
 
 // -----------------------------------------------------------------------------
 // Center details printed on every official receipt.
@@ -11,144 +11,180 @@ export const CENTER_INFO = {
   contact: '',        // e.g. "Tel: (088) 000-0000"
 };
 
+// 80mm thermal receipt printer paper. Printable width is narrower than the
+// roll itself once margins are applied.
+const PAPER_WIDTH = 80;
+const MARGIN_X = 4;
+
 const peso = (n) =>
   Number(n || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 /**
- * Generate (and open the print dialog for) an official receipt.
- * @param {object} tx - a saved transaction record from the API.
+ * Draws the full receipt onto `doc` starting at the top and returns the final
+ * y position reached. Used twice: once on a throwaway tall page to measure
+ * the real content height, then again on a page sized exactly to fit —
+ * so the printed receipt has no wasted blank paper feed.
  */
-export const generateReceiptPDF = (tx, { autoPrint = true } = {}) => {
-  // 148 x 210mm = A5 portrait — a practical printable receipt size.
-  const doc = new jsPDF('p', 'mm', 'a5');
-  const pageWidth = doc.internal.pageSize.getWidth();
-  const marginX = 12;
-  const contentWidth = pageWidth - marginX * 2;
-  let y = 16;
+const drawReceipt = (doc, tx) => {
+  const pageWidth = PAPER_WIDTH;
+  const contentWidth = pageWidth - MARGIN_X * 2;
+  let y = 8;
 
   // --- HEADER ---
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(18);
+  doc.setFontSize(12);
   doc.text(CENTER_INFO.name, pageWidth / 2, y, { align: 'center' });
 
-  y += 6;
+  y += 5;
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
-  doc.text(CENTER_INFO.tagline, pageWidth / 2, y, { align: 'center' });
+  doc.setFontSize(7.5);
+  const taglineLines = doc.splitTextToSize(CENTER_INFO.tagline, contentWidth);
+  doc.text(taglineLines, pageWidth / 2, y, { align: 'center' });
+  y += (taglineLines.length - 1) * 3.5;
 
   if (CENTER_INFO.address) {
-    y += 4;
-    doc.setFontSize(8);
-    doc.text(CENTER_INFO.address, pageWidth / 2, y, { align: 'center' });
+    y += 3.5;
+    doc.setFontSize(7);
+    doc.text(doc.splitTextToSize(CENTER_INFO.address, contentWidth), pageWidth / 2, y, { align: 'center' });
   }
   if (CENTER_INFO.contact) {
-    y += 4;
-    doc.setFontSize(8);
+    y += 3.5;
+    doc.setFontSize(7);
     doc.text(CENTER_INFO.contact, pageWidth / 2, y, { align: 'center' });
   }
 
-  y += 6;
+  y += 5;
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
+  doc.setFontSize(8.5);
   doc.text('OFFICIAL RECEIPT', pageWidth / 2, y, { align: 'center' });
 
   y += 3;
-  doc.setLineWidth(0.4);
-  doc.line(marginX, y, pageWidth - marginX, y);
+  doc.setLineWidth(0.3);
+  doc.line(MARGIN_X, y, pageWidth - MARGIN_X, y);
 
   // --- RECEIPT META + PATIENT INFO ---
-  y += 6;
+  y += 4.5;
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
+  doc.setFontSize(7.5);
 
   const txDate = tx.transaction_date ? new Date(tx.transaction_date).toLocaleDateString('en-PH') : '';
-  doc.text(`Receipt No: ${tx.receipt_no || '—'}`, marginX, y);
-  doc.text(`Date: ${txDate}`, pageWidth - marginX, y, { align: 'right' });
+  doc.text(`Receipt No: ${tx.receipt_no || '—'}`, MARGIN_X, y);
+  y += 4;
+  doc.text(`Date: ${txDate}`, MARGIN_X, y);
 
-  y += 5;
-  doc.text(`Patient: ${tx.patient_name || ''}`, marginX, y);
+  y += 4;
+  const patientLines = doc.splitTextToSize(`Patient: ${tx.patient_name || ''}`, contentWidth);
+  doc.text(patientLines, MARGIN_X, y);
+  y += (patientLines.length - 1) * 3.5;
 
-  y += 5;
   const ageSex = [tx.age ? `Age: ${tx.age}` : null, tx.sex ? `Sex: ${tx.sex}` : null]
     .filter(Boolean)
-    .join('     ');
-  if (ageSex) doc.text(ageSex, marginX, y);
-
-  if (tx.address) {
-    y += 5;
-    const addrLines = doc.splitTextToSize(`Address: ${tx.address}`, contentWidth);
-    doc.text(addrLines, marginX, y);
-    y += (addrLines.length - 1) * 4;
+    .join('   ');
+  if (ageSex) {
+    y += 4;
+    doc.text(ageSex, MARGIN_X, y);
   }
 
-  // --- ITEMS TABLE ---
-  y += 6;
+  if (tx.address) {
+    y += 4;
+    const addrLines = doc.splitTextToSize(`Address: ${tx.address}`, contentWidth);
+    doc.text(addrLines, MARGIN_X, y);
+    y += (addrLines.length - 1) * 3.5;
+  }
+
+  // --- ITEMS ---
+  y += 5;
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
-  doc.text('SERVICE', marginX, y);
-  doc.text('QTY', pageWidth - marginX - 45, y, { align: 'right' });
-  doc.text('PRICE', pageWidth - marginX - 22, y, { align: 'right' });
-  doc.text('AMOUNT', pageWidth - marginX, y, { align: 'right' });
+  doc.setFontSize(7.5);
+  doc.text('ITEM', MARGIN_X, y);
+  doc.text('AMOUNT', pageWidth - MARGIN_X, y, { align: 'right' });
 
   y += 2;
   doc.setLineWidth(0.2);
-  doc.line(marginX, y, pageWidth - marginX, y);
+  doc.line(MARGIN_X, y, pageWidth - MARGIN_X, y);
 
-  y += 5;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(9);
+  y += 4;
   (tx.items || []).forEach((it) => {
-    const nameLines = doc.splitTextToSize(it.name, contentWidth - 55);
-    doc.text(nameLines, marginX, y);
-    doc.text(String(it.qty), pageWidth - marginX - 45, y, { align: 'right' });
-    doc.text(peso(it.price), pageWidth - marginX - 22, y, { align: 'right' });
-    doc.text(peso(it.subtotal), pageWidth - marginX, y, { align: 'right' });
-    y += Math.max(nameLines.length * 4, 5);
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(7.5);
+    const nameLines = doc.splitTextToSize(it.name, contentWidth);
+    doc.text(nameLines, MARGIN_X, y);
+    y += nameLines.length * 3.5;
+
+    doc.setFontSize(7);
+    doc.text(`${it.qty} x ${peso(it.price)}`, MARGIN_X, y);
+    doc.text(peso(it.subtotal), pageWidth - MARGIN_X, y, { align: 'right' });
+    y += 4.5;
   });
 
-  y += 1;
+  y += 0.5;
   doc.setLineWidth(0.2);
-  doc.line(marginX, y, pageWidth - marginX, y);
+  doc.line(MARGIN_X, y, pageWidth - MARGIN_X, y);
 
   // --- TOTALS ---
-  const totalsRight = pageWidth - marginX;
-  const totalsLabel = pageWidth - marginX - 30;
-  y += 6;
-  doc.setFontSize(9);
-
-  const line = (label, value, bold = false) => {
+  y += 5;
+  const line = (label, value, bold = false, size = 7.5) => {
     doc.setFont('helvetica', bold ? 'bold' : 'normal');
-    doc.text(label, totalsLabel, y, { align: 'right' });
-    doc.text(peso(value), totalsRight, y, { align: 'right' });
-    y += 5;
+    doc.setFontSize(size);
+    doc.text(label, pageWidth - MARGIN_X - 22, y, { align: 'right' });
+    doc.text(peso(value), pageWidth - MARGIN_X, y, { align: 'right' });
+    y += 4.5;
   };
 
   line('Subtotal:', tx.subtotal);
   if (Number(tx.discount) > 0) line('Discount:', tx.discount);
-  doc.setFontSize(11);
-  line('TOTAL:', tx.total, true);
-  doc.setFontSize(9);
+  line('TOTAL:', tx.total, true, 9);
   if (tx.amount_tendered != null && Number(tx.amount_tendered) > 0) {
-    line('Amount Tendered:', tx.amount_tendered);
+    line('Tendered:', tx.amount_tendered);
     line('Change:', tx.change);
   }
 
   // --- FOOTER ---
-  y += 8;
+  y += 3;
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.text(`Payment: ${tx.payment_method || 'Cash'}`, marginX, y);
-  if (tx.cashier) doc.text(`Cashier: ${tx.cashier}`, pageWidth - marginX, y, { align: 'right' });
+  doc.setFontSize(7);
+  doc.text(`Payment: ${tx.payment_method || 'Cash'}`, MARGIN_X, y);
+  if (tx.cashier) {
+    y += 3.5;
+    doc.text(`Cashier: ${tx.cashier}`, MARGIN_X, y);
+  }
 
-  y += 14;
+  y += 10;
   doc.setLineWidth(0.2);
-  doc.line(pageWidth - marginX - 50, y, pageWidth - marginX, y);
-  y += 4;
-  doc.text('Authorized Signature', pageWidth - marginX - 25, y, { align: 'center' });
+  doc.line(pageWidth / 2 - 18, y, pageWidth / 2 + 18, y);
+  y += 3.5;
+  doc.setFontSize(7);
+  doc.text('Authorized Signature', pageWidth / 2, y, { align: 'center' });
 
-  y += 12;
-  doc.setFontSize(8);
-  doc.text('Thank you and get well soon!', pageWidth / 2, y, { align: 'center' });
+  y += 8;
+  doc.setFontSize(7);
+  doc.text(doc.splitTextToSize('Thank you and get well soon!', contentWidth), pageWidth / 2, y, { align: 'center' });
+
+  y += 6;
+  return y;
+};
+
+/**
+ * Generate (and open the print dialog for) an official receipt sized for an
+ * 80mm thermal receipt printer.
+ * @param {object} tx - a saved transaction record from the API.
+ */
+export const generateReceiptPDF = (tx, { autoPrint = true } = {}) => {
+  // Pass 1: draw on a generously tall throwaway page just to measure the
+  // actual content height for this receipt (item count varies per sale).
+  const measureDoc = new jsPDF('p', 'mm', [PAPER_WIDTH, 1000]);
+  const measuredHeight = drawReceipt(measureDoc, tx);
+
+  // jsPDF force-swaps width/height for orientation 'p' whenever width > height
+  // (to "enforce" portrait), which would corrupt our fixed 80mm width on a
+  // short receipt. Picking the orientation whose swap condition can't fire
+  // keeps the format array exactly as given.
+  const orientation = measuredHeight >= PAPER_WIDTH ? 'p' : 'l';
+
+  // Pass 2: draw for real on a page sized exactly to the content, so the
+  // printer doesn't feed out extra blank roll paper.
+  const doc = new jsPDF(orientation, 'mm', [PAPER_WIDTH, measuredHeight]);
+  drawReceipt(doc, tx);
 
   if (autoPrint) {
     doc.autoPrint();
