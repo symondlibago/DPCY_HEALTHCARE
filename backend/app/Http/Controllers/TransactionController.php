@@ -44,6 +44,7 @@ class TransactionController extends Controller
             'items.*.price' => 'required|numeric|min:0',
             'items.*.qty' => 'required|numeric|min:1',
             'discount' => 'nullable|numeric|min:0',
+            'discount_type' => 'nullable|string|in:Regular,PWD,Senior,Yakap Member',
             'amount_tendered' => 'nullable|numeric|min:0',
             'payment_method' => 'nullable|string|max:50',
             'cashier' => 'nullable|string|max:255',
@@ -72,7 +73,15 @@ class TransactionController extends Controller
                 ];
             }
 
-            $discount = floatval($request->discount ?? 0);
+            // PWD / Senior / Yakap members get a mandated 20% discount on all
+            // services. Computed server-side so the total is authoritative.
+            $discountType = $request->discount_type ?: 'Regular';
+            $isSpecial = in_array($discountType, ['PWD', 'Senior', 'Yakap Member'], true);
+            $discountPercent = $isSpecial ? 20 : 0;
+            $discount = $isSpecial
+                ? round($subtotal * 0.20, 2)
+                : floatval($request->discount ?? 0);
+
             $total = round($subtotal - $discount, 2);
             $tendered = $request->filled('amount_tendered') ? floatval($request->amount_tendered) : null;
             $change = ($tendered !== null) ? round(max($tendered - $total, 0), 2) : 0;
@@ -87,6 +96,8 @@ class TransactionController extends Controller
                 'items' => $items,
                 'subtotal' => round($subtotal, 2),
                 'discount' => $discount,
+                'discount_type' => $discountType,
+                'discount_percent' => $discountPercent,
                 'total' => $total,
                 'amount_tendered' => $tendered,
                 'change' => $change,

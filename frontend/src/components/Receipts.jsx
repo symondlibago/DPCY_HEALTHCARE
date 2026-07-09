@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { Plus, Minus, Trash2, Search, Loader2, Receipt as ReceiptIcon, Printer, X, CheckCircle, FileSpreadsheet } from 'lucide-react';
+import { Plus, Minus, Trash2, Search, Loader2, Receipt as ReceiptIcon, Printer, X, CheckCircle, FileSpreadsheet, BadgePercent } from 'lucide-react';
 import { Button } from '@/components/ui/button.jsx';
 import { Card, CardContent } from '@/components/ui/card.jsx';
 import { getServices, createTransaction, getUser } from '../utils/auth';
@@ -17,6 +17,10 @@ const todayStr = () => {
   return new Date(d.getTime() - off * 60000).toISOString().split('T')[0];
 };
 
+// Patient discount categories. The special types get 20% off all services.
+const DISCOUNT_TYPES = ['Regular', 'PWD', 'Senior', 'Yakap Member'];
+const DISCOUNT_RATE = 20; // percent
+
 export default function Receipts() {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,6 +35,7 @@ export default function Receipts() {
   // Cart: { service_id, name, price, qty }
   const [items, setItems] = useState([]);
   const [discount, setDiscount] = useState('');
+  const [discountType, setDiscountType] = useState('Regular');
   const [tendered, setTendered] = useState('');
   const [paymentMethod, setPaymentMethod] = useState('Cash');
 
@@ -69,13 +74,19 @@ export default function Receipts() {
     () => items.reduce((sum, i) => sum + Number(i.price || 0) * Number(i.qty || 0), 0),
     [items]
   );
-  const total = Math.max(subtotal - Number(discount || 0), 0);
+  // PWD / Senior / Yakap members get a mandated 20% discount on all services.
+  const isSpecialDiscount = discountType !== 'Regular';
+  const discountAmount = isSpecialDiscount
+    ? Math.round(subtotal * 0.20 * 100) / 100
+    : Number(discount || 0);
+  const total = Math.max(subtotal - discountAmount, 0);
   const change = tendered ? Math.max(Number(tendered) - total, 0) : 0;
 
   const resetForm = () => {
     setPatient({ name: '', age: '', sex: '', address: '' });
     setItems([]);
     setDiscount('');
+    setDiscountType('Regular');
     setTendered('');
     setPaymentMethod('Cash');
     setTxDate(todayStr());
@@ -100,7 +111,8 @@ export default function Receipts() {
           price: Number(i.price),
           qty: Number(i.qty),
         })),
-        discount: Number(discount || 0),
+        discount: discountAmount,
+        discount_type: discountType,
         amount_tendered: tendered ? Number(tendered) : null,
         payment_method: paymentMethod,
         cashier: user?.name || null,
@@ -193,6 +205,38 @@ export default function Receipts() {
                   <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Date</label>
                   <CustomDatePicker value={txDate} onChange={setTxDate} />
                 </div>
+
+                <div className="md:col-span-2 space-y-1.5">
+                  <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Patient Type</label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                    {DISCOUNT_TYPES.map((t) => {
+                      const active = discountType === t;
+                      const special = t !== 'Regular';
+                      return (
+                        <button
+                          key={t}
+                          onClick={() => setDiscountType(t)}
+                          className={`flex flex-col items-center justify-center py-2.5 px-2 rounded-xl text-sm font-medium border transition ${active
+                            ? special
+                              ? 'bg-emerald-700 text-white border-emerald-700 shadow-sm'
+                              : 'bg-gray-800 text-white border-gray-800'
+                            : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'}`}
+                        >
+                          <span>{t}</span>
+                          {special && (
+                            <span className={`text-[10px] font-extrabold ${active ? 'text-emerald-100' : 'text-emerald-600'}`}>20% OFF</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  {isSpecialDiscount && (
+                    <div className="flex items-center gap-2 mt-1 px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-200">
+                      <BadgePercent className="h-4 w-4 text-emerald-700 shrink-0" />
+                      <p className="text-xs font-bold text-emerald-800">{DISCOUNT_RATE}% {discountType} discount applied to all services.</p>
+                    </div>
+                  )}
+                </div>
               </div>
             </CardContent>
           </Card>
@@ -213,12 +257,20 @@ export default function Receipts() {
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {filteredServices.map((svc) => (
                     <button key={svc.id} onClick={() => addService(svc)}
-                      className="text-left p-3 rounded-xl border border-gray-200 hover:border-emerald-500 hover:bg-emerald-50/40 transition group">
+                      className={`text-left p-3 rounded-xl border transition group ${isSpecialDiscount ? 'border-emerald-300 bg-emerald-50/40 hover:border-emerald-500' : 'border-gray-200 hover:border-emerald-500 hover:bg-emerald-50/40'}`}>
                       <div className="flex items-start justify-between gap-2">
                         <span className="text-sm font-semibold text-gray-800 leading-snug">{svc.name}</span>
                         <Plus className="h-4 w-4 text-gray-300 group-hover:text-emerald-600 shrink-0" />
                       </div>
-                      <span className="text-xs font-bold text-emerald-700">{peso(svc.price)}</span>
+                      {isSpecialDiscount ? (
+                        <div className="flex items-baseline gap-1.5 flex-wrap">
+                          <span className="text-xs font-bold text-emerald-700">{peso(svc.price * (1 - DISCOUNT_RATE / 100))}</span>
+                          <span className="text-[10px] text-gray-400 line-through">{peso(svc.price)}</span>
+                          <span className="text-[9px] font-extrabold text-emerald-600">-{DISCOUNT_RATE}%</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs font-bold text-emerald-700">{peso(svc.price)}</span>
+                      )}
                     </button>
                   ))}
                   {filteredServices.length === 0 && (
@@ -269,13 +321,20 @@ export default function Receipts() {
                 <div className="flex justify-between text-sm text-gray-600">
                   <span>Subtotal</span><span className="font-semibold">{peso(subtotal)}</span>
                 </div>
-                <div className="flex justify-between items-center text-sm text-gray-600">
-                  <span>Discount</span>
-                  <div className="flex items-center gap-1">
-                    <span className="text-xs text-gray-400">₱</span>
-                    <input type="number" min="0" step="0.01" value={discount} onChange={(e) => setDiscount(e.target.value)} className="w-20 text-right text-sm border border-gray-200 rounded py-1 px-1" placeholder="0.00" />
+                {isSpecialDiscount ? (
+                  <div className="flex justify-between items-center text-sm">
+                    <span className="font-semibold text-emerald-700">{discountType} Discount ({DISCOUNT_RATE}%)</span>
+                    <span className="font-semibold text-emerald-700">- {peso(discountAmount)}</span>
                   </div>
-                </div>
+                ) : (
+                  <div className="flex justify-between items-center text-sm text-gray-600">
+                    <span>Discount</span>
+                    <div className="flex items-center gap-1">
+                      <span className="text-xs text-gray-400">₱</span>
+                      <input type="number" min="0" step="0.01" value={discount} onChange={(e) => setDiscount(e.target.value)} className="w-20 text-right text-sm border border-gray-200 rounded py-1 px-1" placeholder="0.00" />
+                    </div>
+                  </div>
+                )}
                 <div className="flex justify-between text-lg font-extrabold text-gray-900 pt-1">
                   <span>Total</span><span className="text-emerald-700">{peso(total)}</span>
                 </div>

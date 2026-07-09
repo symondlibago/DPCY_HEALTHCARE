@@ -186,7 +186,12 @@ export default function TransactionHistory() {
                 </div>
                 <div className="border-t pt-3 space-y-1">
                   <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>{peso(viewTx.subtotal)}</span></div>
-                  {Number(viewTx.discount) > 0 && <div className="flex justify-between text-gray-600"><span>Discount</span><span>-{peso(viewTx.discount)}</span></div>}
+                  {Number(viewTx.discount) > 0 && (
+                    <div className="flex justify-between text-gray-600">
+                      <span>{viewTx.discount_type && viewTx.discount_type !== 'Regular' ? `${viewTx.discount_type} Discount (${Number(viewTx.discount_percent) || 20}%)` : 'Discount'}</span>
+                      <span>-{peso(viewTx.discount)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between font-extrabold text-gray-900 text-lg"><span>Total</span><span className="text-emerald-700">{peso(viewTx.total)}</span></div>
                 </div>
               </div>

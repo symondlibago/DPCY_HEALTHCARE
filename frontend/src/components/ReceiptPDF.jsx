@@ -85,6 +85,13 @@ const drawReceipt = (doc, tx) => {
     doc.text(ageSex, MARGIN_X, y);
   }
 
+  if (tx.discount_type && tx.discount_type !== 'Regular') {
+    y += 4;
+    doc.setFont('helvetica', 'bold');
+    doc.text(`${tx.discount_type} — ${Number(tx.discount_percent) || 20}% Discount`, MARGIN_X, y);
+    doc.setFont('helvetica', 'normal');
+  }
+
   if (tx.address) {
     y += 4;
     const addrLines = doc.splitTextToSize(`Address: ${tx.address}`, contentWidth);
@@ -132,7 +139,13 @@ const drawReceipt = (doc, tx) => {
   };
 
   line('Subtotal:', tx.subtotal);
-  if (Number(tx.discount) > 0) line('Discount:', tx.discount);
+  if (Number(tx.discount) > 0) {
+    const isSpecial = tx.discount_type && tx.discount_type !== 'Regular';
+    const dLabel = isSpecial
+      ? `${tx.discount_type} (${Number(tx.discount_percent) || 20}%):`
+      : 'Discount:';
+    line(dLabel, tx.discount);
+  }
   line('TOTAL:', tx.total, true, 9);
   if (tx.amount_tendered != null && Number(tx.amount_tendered) > 0) {
     line('Tendered:', tx.amount_tendered);

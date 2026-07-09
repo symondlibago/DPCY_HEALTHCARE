@@ -16,6 +16,7 @@ export function downloadTransactionExcel(tx) {
     ['Age', tx.age ?? ''],
     ['Sex', tx.sex || ''],
     ['Address', tx.address || ''],
+    ['Patient Type', tx.discount_type || 'Regular'],
     ['Payment', tx.payment_method || ''],
     ['Cashier', tx.cashier || ''],
     [],
@@ -23,7 +24,7 @@ export function downloadTransactionExcel(tx) {
     ...(tx.items || []).map((i) => [i.name, num(i.qty), num(i.price), num(i.subtotal ?? i.price * i.qty)]),
     [],
     ['', '', 'Subtotal', num(tx.subtotal)],
-    ['', '', 'Discount', num(tx.discount)],
+    ['', '', tx.discount_type && tx.discount_type !== 'Regular' ? `${tx.discount_type} Discount (${Number(tx.discount_percent) || 20}%)` : 'Discount', num(tx.discount)],
     ['', '', 'Total', num(tx.total)],
     ['', '', 'Tendered', num(tx.amount_tendered)],
     ['', '', 'Change', num(tx.change)],
@@ -39,13 +40,14 @@ export function downloadTransactionExcel(tx) {
  * Export a list of transactions as a records sheet (one row per transaction).
  */
 export function downloadTransactionsExcel(list, filename = 'Transactions') {
-  const header = ['Receipt No', 'Date', 'Patient', 'Age', 'Sex', 'Services', 'Subtotal', 'Discount', 'Total', 'Payment', 'Cashier'];
+  const header = ['Receipt No', 'Date', 'Patient', 'Age', 'Sex', 'Patient Type', 'Services', 'Subtotal', 'Discount', 'Total', 'Payment', 'Cashier'];
   const body = (list || []).map((t) => [
     t.receipt_no || '',
     fmtDate(t.transaction_date),
     t.patient_name || '',
     t.age ?? '',
     t.sex || '',
+    t.discount_type || 'Regular',
     (t.items || []).map((i) => `${i.name} x${i.qty}`).join(', '),
     num(t.subtotal),
     num(t.discount),
@@ -54,9 +56,9 @@ export function downloadTransactionsExcel(list, filename = 'Transactions') {
     t.cashier || '',
   ]);
   const grand = (list || []).reduce((s, t) => s + num(t.total), 0);
-  const aoa = [header, ...body, [], ['', '', '', '', '', 'TOTAL', '', '', grand]];
+  const aoa = [header, ...body, [], ['', '', '', '', '', '', 'TOTAL', '', '', grand]];
   const ws = XLSX.utils.aoa_to_sheet(aoa);
-  ws['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 22 }, { wch: 6 }, { wch: 6 }, { wch: 40 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 16 }];
+  ws['!cols'] = [{ wch: 20 }, { wch: 12 }, { wch: 22 }, { wch: 6 }, { wch: 6 }, { wch: 14 }, { wch: 40 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 12 }, { wch: 16 }];
   const wb = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(wb, ws, 'Transactions');
   XLSX.writeFile(wb, `${filename}.xlsx`);
