@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Loader2, Search, Clock, LogIn, LogOut } from 'lucide-react';
+import { Loader2, Search, UserCheck, UserX, MinusCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button.jsx';
 import { Card, CardContent } from '@/components/ui/card.jsx';
-import { getShifts, getShiftHistory, timeInEmployee, timeOutEmployee } from '../utils/auth';
+import { getAttendance, getAttendanceHistory, markAttendance } from '../utils/auth';
 import { CustomDatePicker } from './CustomInputs';
 
 const toLocalDateStr = (d) => {
@@ -33,20 +33,18 @@ const getMonthRange = () => {
 const formatDate = (dateStr) =>
   dateStr ? new Date(`${dateStr}T00:00:00`).toLocaleDateString('en-PH', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
 
-const formatTime = (dateString) =>
-  dateString ? new Date(dateString).toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' }) : '—';
+const StatusBadge = ({ status }) => (
+  <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold ${
+    status === 'present' ? 'bg-emerald-100 text-emerald-700'
+      : status === 'absent' ? 'bg-red-100 text-red-700'
+      : 'bg-gray-100 text-gray-500'
+  }`}>
+    {status === 'present' ? <UserCheck className="h-3 w-3" /> : status === 'absent' ? <UserX className="h-3 w-3" /> : <MinusCircle className="h-3 w-3" />}
+    {status === 'present' ? 'Present' : status === 'absent' ? 'Absent' : 'Not Marked'}
+  </span>
+);
 
-const formatDuration = (start, end, nowMs) => {
-  if (!start) return '—';
-  const startMs = new Date(start).getTime();
-  const endMs = end ? new Date(end).getTime() : nowMs;
-  const totalMin = Math.max(0, Math.floor((endMs - startMs) / 60000));
-  const h = Math.floor(totalMin / 60);
-  const m = totalMin % 60;
-  return `${h}h ${m}m`;
-};
-
-export default function Shifts() {
+export default function AttendanceLog() {
   const [quickFilter, setQuickFilter] = useState('today'); // 'today' | 'custom' | 'week' | 'month'
   const [date, setDate] = useState(todayStr());
   const [rows, setRows] = useState([]);
@@ -54,24 +52,17 @@ export default function Shifts() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [actingId, setActingId] = useState(null);
-  const [nowMs, setNowMs] = useState(Date.now());
 
   const isLogView = quickFilter === 'week' || quickFilter === 'month';
-  const isToday = date === todayStr();
-
-  useEffect(() => {
-    const timer = setInterval(() => setNowMs(Date.now()), 30000);
-    return () => clearInterval(timer);
-  }, []);
 
   const fetchData = async () => {
     setLoading(true);
     try {
       if (quickFilter === 'week' || quickFilter === 'month') {
         const [from, to] = quickFilter === 'week' ? getWeekRange() : getMonthRange();
-        setLogRows(await getShiftHistory(`?from=${from}&to=${to}`));
+        setLogRows(await getAttendanceHistory(`?from=${from}&to=${to}`));
       } else {
-        setRows(await getShifts(`?date=${date}`));
+        setRows(await getAttendance(`?date=${date}`));
       }
     } finally {
       setLoading(false);
@@ -94,31 +85,16 @@ export default function Shifts() {
       r.position?.toLowerCase().includes(search.toLowerCase())
     ), [logRows, search]);
 
-  const handleTimeIn = async (employeeId) => {
+  const handleMark = async (employeeId, status) => {
     setActingId(employeeId);
     try {
-      const res = await timeInEmployee(employeeId);
+      const res = await markAttendance(employeeId, { attendance_date: date, status });
       const data = await res.json();
-      if (!data.success) return alert(data.message || 'Failed to start shift.');
+      if (!data.success) return alert(data.message || 'Failed to update attendance.');
       fetchData();
     } catch (e) {
       console.error(e);
-      alert('Failed to start shift.');
-    } finally {
-      setActingId(null);
-    }
-  };
-
-  const handleTimeOut = async (employeeId) => {
-    setActingId(employeeId);
-    try {
-      const res = await timeOutEmployee(employeeId);
-      const data = await res.json();
-      if (!data.success) return alert(data.message || 'Failed to end shift.');
-      fetchData();
-    } catch (e) {
-      console.error(e);
-      alert('Failed to end shift.');
+      alert('Failed to update attendance.');
     } finally {
       setActingId(null);
     }
@@ -138,8 +114,8 @@ export default function Shifts() {
   return (
     <div className="p-8 bg-gray-50 min-h-screen space-y-6">
       <div>
-        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Start Shift / End Shift</h1>
-        <p className="text-gray-500 mt-1">Record employee time in and time out for their shift, and review past records.</p>
+        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Attendance Log</h1>
+        <p className="text-gray-500 mt-1">Mark employee attendance as present or absent for any date, and review past records.</p>
       </div>
 
       <div className="flex flex-wrap gap-2 items-end">
@@ -170,27 +146,20 @@ export default function Shifts() {
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Date</th>
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Full Name</th>
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Position</th>
-                  <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Time In</th>
-                  <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Time Out</th>
-                  <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Duration</th>
+                  <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Status</th>
                 </tr>
               </thead>
               <tbody className="divide-y">
                 {filteredLog.map((r) => (
-                  <tr key={`${r.employee_id}-${r.shift_date}`} className="hover:bg-emerald-50/30">
-                    <td className="p-5 text-sm font-semibold text-gray-700">{formatDate(r.shift_date)}</td>
+                  <tr key={`${r.employee_id}-${r.attendance_date}`} className="hover:bg-emerald-50/30">
+                    <td className="p-5 text-sm font-semibold text-gray-700">{formatDate(r.attendance_date)}</td>
                     <td className="p-5 font-bold text-gray-900">{r.name}</td>
                     <td className="p-5 text-sm text-gray-600">{r.position}</td>
-                    <td className="p-5 text-sm text-gray-700">{formatTime(r.time_in)}</td>
-                    <td className="p-5 text-sm text-gray-700">
-                      {formatTime(r.time_out)}
-                      {r.auto_closed && <span className="ml-1.5 text-[10px] font-bold text-amber-600">(auto 6PM)</span>}
-                    </td>
-                    <td className="p-5 text-sm font-mono text-gray-600">{formatDuration(r.time_in, r.time_out, nowMs)}</td>
+                    <td className="p-5"><StatusBadge status={r.status} /></td>
                   </tr>
                 ))}
                 {filteredLog.length === 0 && (
-                  <tr><td colSpan={6} className="p-12 text-center text-sm text-gray-400">No shift records for this period.</td></tr>
+                  <tr><td colSpan={4} className="p-12 text-center text-sm text-gray-400">No attendance records for this period.</td></tr>
                 )}
               </tbody>
             </table>
@@ -202,9 +171,7 @@ export default function Shifts() {
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Full Name</th>
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Position</th>
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Account</th>
-                  <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Time In</th>
-                  <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Time Out</th>
-                  <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Duration</th>
+                  <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Status</th>
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase text-right">Action</th>
                 </tr>
               </thead>
@@ -223,33 +190,31 @@ export default function Shifts() {
                         <span className="px-2.5 py-1 rounded-full text-[11px] font-bold bg-gray-100 text-gray-500">No Account</span>
                       )}
                     </td>
-                    <td className="p-5 text-sm text-gray-700">{formatTime(r.time_in)}</td>
-                    <td className="p-5 text-sm text-gray-700">
-                      {formatTime(r.time_out)}
-                      {r.auto_closed && <span className="ml-1.5 text-[10px] font-bold text-amber-600">(auto 6PM)</span>}
-                    </td>
-                    <td className="p-5 text-sm font-mono text-gray-600">{formatDuration(r.time_in, r.time_out, nowMs)}</td>
+                    <td className="p-5"><StatusBadge status={r.status} /></td>
                     <td className="p-5 text-right">
-                      {!isToday ? (
-                        <span className="text-xs text-gray-400">Past date</span>
-                      ) : !r.time_in ? (
-                        <Button onClick={() => handleTimeIn(r.employee_id)} disabled={actingId === r.employee_id} size="sm" className="bg-emerald-700 hover:bg-emerald-800 rounded-lg">
-                          {actingId === r.employee_id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <LogIn className="h-4 w-4 mr-1" />} Start Shift
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          onClick={() => handleMark(r.employee_id, r.status === 'present' ? 'not_marked' : 'present')}
+                          disabled={actingId === r.employee_id}
+                          size="sm"
+                          className={`rounded-lg ${r.status === 'present' ? 'bg-emerald-700 hover:bg-emerald-800' : 'bg-gray-100 text-gray-600 hover:bg-emerald-50'}`}
+                        >
+                          {actingId === r.employee_id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <UserCheck className="h-4 w-4 mr-1" />} Present
                         </Button>
-                      ) : !r.time_out ? (
-                        <Button onClick={() => handleTimeOut(r.employee_id)} disabled={actingId === r.employee_id} size="sm" className="bg-red-600 hover:bg-red-700 rounded-lg">
-                          {actingId === r.employee_id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <LogOut className="h-4 w-4 mr-1" />} Done Shift
+                        <Button
+                          onClick={() => handleMark(r.employee_id, r.status === 'absent' ? 'not_marked' : 'absent')}
+                          disabled={actingId === r.employee_id}
+                          size="sm"
+                          className={`rounded-lg ${r.status === 'absent' ? 'bg-red-600 hover:bg-red-700' : 'bg-gray-100 text-gray-600 hover:bg-red-50'}`}
+                        >
+                          {actingId === r.employee_id ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <UserX className="h-4 w-4 mr-1" />} Absent
                         </Button>
-                      ) : (
-                        <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[11px] font-bold bg-emerald-100 text-emerald-700">
-                          <Clock className="h-3 w-3" /> Completed
-                        </span>
-                      )}
+                      </div>
                     </td>
                   </tr>
                 ))}
                 {filtered.length === 0 && (
-                  <tr><td colSpan={8} className="p-12 text-center text-sm text-gray-400">No employees found.</td></tr>
+                  <tr><td colSpan={6} className="p-12 text-center text-sm text-gray-400">No employees found.</td></tr>
                 )}
               </tbody>
             </table>

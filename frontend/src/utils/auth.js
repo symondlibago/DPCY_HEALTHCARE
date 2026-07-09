@@ -88,11 +88,10 @@ export const createExpense = (data) => create('expenses', data);
 export const updateExpense = (id, data) => update('expenses', id, data);
 export const deleteExpense = (id) => remove('expenses', id);
 
-// SHIFTS (employee time in / time out, admin + super admin)
-export const getShifts = (params = '') => list('shifts', params);
-export const getShiftHistory = (params = '') => list('shifts/history', params);
-export const timeInEmployee = (employeeId) => create(`shifts/${employeeId}/time-in`, {});
-export const timeOutEmployee = (employeeId) => create(`shifts/${employeeId}/time-out`, {});
+// ATTENDANCE (employee present/absent log, admin + super admin)
+export const getAttendance = (params = '') => list('attendance', params);
+export const getAttendanceHistory = (params = '') => list('attendance/history', params);
+export const markAttendance = (employeeId, data) => create(`attendance/${employeeId}/mark`, data);
 
 // REPORTS (admin + super admin) — returns the full summary object
 export const getSalesReport = async (params = '') => {

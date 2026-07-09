@@ -7,7 +7,7 @@ use App\Http\Controllers\ServiceController;
 use App\Http\Controllers\TransactionController;
 use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\UserController;
-use App\Http\Controllers\ShiftController;
+use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ReportController;
 
 /*
@@ -44,12 +44,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/reports/sales', [ReportController::class, 'sales']);
     });
 
-    // Employee shift tracking (time in / time out): admin + super admin
+    // Employee attendance tracking (present/absent per day): admin + super admin
     Route::middleware('role:admin,super_admin')->group(function () {
-        Route::get('/shifts', [ShiftController::class, 'index']);
-        Route::get('/shifts/history', [ShiftController::class, 'history']);
-        Route::post('/shifts/{employee}/time-in', [ShiftController::class, 'timeIn']);
-        Route::post('/shifts/{employee}/time-out', [ShiftController::class, 'timeOut']);
+        Route::get('/attendance', [AttendanceController::class, 'index']);
+        Route::get('/attendance/history', [AttendanceController::class, 'history']);
+        Route::post('/attendance/{employee}/mark', [AttendanceController::class, 'mark']);
     });
 
     // Super admin only: employee (staff) management + user account management

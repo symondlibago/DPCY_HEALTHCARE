@@ -14,7 +14,7 @@ import {
   LogOut,
   Stethoscope,
   Settings as SettingsIcon,
-  Clock,
+  UserCheck,
   BarChart3
 } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
@@ -29,7 +29,7 @@ import TransactionHistory from './components/TransactionHistory'
 import Expenses from './components/Expenses'
 import Services from './components/Services'
 import Employee from './components/Employee'
-import Shifts from './components/Shifts'
+import AttendanceLog from './components/AttendanceLog'
 import SalesReport from './components/SalesReport'
 import Settings from './components/Settings'
 import LoginPage from './components/LoginPage'
@@ -44,7 +44,7 @@ const navigationItems = [
   { path: '/expenses', icon: Wallet, label: 'Daily Expenses', color: 'text-white', roles: ['admin', 'staff', 'super_admin'] },
   { path: '/services', icon: Stethoscope, label: 'Services', color: 'text-white', roles: ['admin', 'staff', 'super_admin'] },
   { path: '/employees', icon: Users, label: 'Employee Management', color: 'text-white', roles: ['super_admin'] },
-  { path: '/shifts', icon: Clock, label: 'Start Shift / End Shift', color: 'text-white', roles: ['admin', 'super_admin'] },
+  { path: '/attendance', icon: UserCheck, label: 'Attendance Log', color: 'text-white', roles: ['admin', 'super_admin'] },
   { path: '/settings', icon: SettingsIcon, label: 'Settings', color: 'text-white', roles: ['admin', 'staff', 'super_admin'] },
   ]
 
@@ -271,7 +271,7 @@ function MainContent({ sidebarCollapsed, onLogout, isMobile, userRole }) {
           <Route path="/expenses" element={<ProtectedComponent component={Expenses} allowedRoles={['admin', 'staff', 'super_admin']} />} />
           <Route path="/services" element={<ProtectedComponent component={Services} allowedRoles={['admin', 'staff', 'super_admin']} />} />
           <Route path="/employees" element={<ProtectedComponent component={Employee} allowedRoles={['super_admin']} />} />
-          <Route path="/shifts" element={<ProtectedComponent component={Shifts} allowedRoles={['admin', 'super_admin']} />} />
+          <Route path="/attendance" element={<ProtectedComponent component={AttendanceLog} allowedRoles={['admin', 'super_admin']} />} />
           <Route path="/settings" element={<ProtectedComponent component={Settings} allowedRoles={['admin', 'staff', 'super_admin']} />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>

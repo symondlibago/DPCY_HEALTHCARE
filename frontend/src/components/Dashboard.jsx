@@ -10,13 +10,13 @@ import {
   AlertTriangle,
   Stethoscope,
   Coins,
-  Clock,
-  LogIn,
-  LogOut
+  UserCheck,
+  UserX,
+  MinusCircle
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Button } from '@/components/ui/button.jsx'
-import { getTransactions, getExpenses, getServices, getShifts, getUser } from '../utils/auth'
+import { getTransactions, getExpenses, getServices, getAttendance, getUser } from '../utils/auth'
 
 const formatCurrency = (amount) =>
   `₱${Number(amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -26,9 +26,6 @@ const todayStr = () => {
   const off = d.getTimezoneOffset()
   return new Date(d.getTime() - off * 60000).toISOString().split('T')[0]
 }
-
-const formatTime = (dateString) =>
-  dateString ? new Date(dateString).toLocaleTimeString('en-PH', { hour: '2-digit', minute: '2-digit' }) : null
 
 const formatTimeAgo = (dateString) => {
   if (!dateString) return ''
@@ -49,7 +46,7 @@ function Dashboard() {
   })
   const [recentTx, setRecentTx] = useState([])
   const [recentExp, setRecentExp] = useState([])
-  const [shifts, setShifts] = useState([])
+  const [attendance, setAttendance] = useState([])
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState(null)
 
@@ -57,11 +54,11 @@ function Dashboard() {
     setLoading(true)
     try {
       const today = todayStr()
-      const [txs, exps, services, shiftRows] = await Promise.all([
+      const [txs, exps, services, attendanceRows] = await Promise.all([
         getTransactions(`?date=${today}`),
         getExpenses(`?date=${today}`),
         getServices(),
-        canViewEmployees ? getShifts(`?date=${today}`) : Promise.resolve([])
+        canViewEmployees ? getAttendance(`?date=${today}`) : Promise.resolve([])
       ])
 
       const revenue = txs.reduce((s, t) => s + Number(t.total || 0), 0)
@@ -71,12 +68,12 @@ function Dashboard() {
         revenue,
         txCount: txs.length,
         expenses,
-        employees: shiftRows.length,
+        employees: attendanceRows.length,
         activeServices: services.filter((s) => s.is_active).length
       })
       setRecentTx(txs.slice(0, 5))
       setRecentExp(exps.slice(0, 5))
-      setShifts(shiftRows)
+      setAttendance(attendanceRows)
       setLastUpdated(new Date())
     } catch (e) {
       console.error('Dashboard error:', e)
@@ -89,9 +86,9 @@ function Dashboard() {
 
   const net = data.revenue - data.expenses
 
-  const timedIn = shifts.filter((s) => s.time_in && !s.time_out).length
-  const timedOut = shifts.filter((s) => s.time_out).length
-  const notStarted = shifts.filter((s) => !s.time_in).length
+  const presentCount = attendance.filter((a) => a.status === 'present').length
+  const absentCount = attendance.filter((a) => a.status === 'absent').length
+  const notMarkedCount = attendance.filter((a) => a.status === 'not_marked').length
 
   const statsCards = [
     { title: "Today's Revenue", value: formatCurrency(data.revenue), icon: Coins },
@@ -190,58 +187,56 @@ function Dashboard() {
         )}
       </div>
 
-      {/* Employee Shift Monitor */}
+      {/* Attendance Monitoring Logs */}
       {canViewEmployees && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.3 }}>
           <Card className="bg-[var(--color-card)] border border-[var(--color-border)] shadow-md">
             <CardHeader>
               <CardTitle className="text-[var(--color-foreground)] flex items-center gap-2">
-                <Clock className="h-5 w-5 text-[var(--color-primary)]" /> Employee Shift Monitor (Today)
+                <UserCheck className="h-5 w-5 text-[var(--color-primary)]" /> Attendance Monitoring Logs (Today)
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-emerald-700/70">On Shift</p>
-                    <p className="text-xl font-bold text-emerald-900">{timedIn}</p>
+                    <p className="text-xs text-emerald-700/70">Present</p>
+                    <p className="text-xl font-bold text-emerald-900">{presentCount}</p>
                   </div>
-                  <LogIn className="h-6 w-6 text-emerald-600" />
+                  <UserCheck className="h-6 w-6 text-emerald-600" />
                 </div>
-                <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-between">
+                <div className="p-4 rounded-lg bg-red-50 border border-red-100 flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-emerald-700/70">Timed Out</p>
-                    <p className="text-xl font-bold text-emerald-900">{timedOut}</p>
+                    <p className="text-xs text-red-700/70">Absent</p>
+                    <p className="text-xl font-bold text-red-900">{absentCount}</p>
                   </div>
-                  <LogOut className="h-6 w-6 text-emerald-600" />
+                  <UserX className="h-6 w-6 text-red-600" />
                 </div>
-                <div className="p-4 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-between">
+                <div className="p-4 rounded-lg bg-gray-50 border border-gray-200 flex items-center justify-between">
                   <div>
-                    <p className="text-xs text-emerald-700/70">Not Started</p>
-                    <p className="text-xl font-bold text-emerald-900">{notStarted}</p>
+                    <p className="text-xs text-gray-600">Not Marked</p>
+                    <p className="text-xl font-bold text-gray-700">{notMarkedCount}</p>
                   </div>
-                  <Users className="h-6 w-6 text-emerald-600" />
+                  <MinusCircle className="h-6 w-6 text-gray-500" />
                 </div>
               </div>
 
               {loading ? (
                 <div className="flex items-center justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" /></div>
-              ) : shifts.length > 0 ? (
+              ) : attendance.length > 0 ? (
                 <div className="max-h-64 overflow-y-auto space-y-2">
-                  {shifts.map((s) => (
-                    <div key={s.employee_id} className="flex items-center justify-between text-sm py-1.5 border-b border-[var(--color-border)]/50 last:border-0">
+                  {attendance.map((a) => (
+                    <div key={a.employee_id} className="flex items-center justify-between text-sm py-1.5 border-b border-[var(--color-border)]/50 last:border-0">
                       <div>
-                        <p className="text-[var(--color-foreground)] font-medium">{s.name}</p>
-                        <p className="text-xs text-[var(--color-foreground)]/60">{s.position}</p>
+                        <p className="text-[var(--color-foreground)] font-medium">{a.name}</p>
+                        <p className="text-xs text-[var(--color-foreground)]/60">{a.position}</p>
                       </div>
                       <span className={`text-xs font-semibold px-2.5 py-1 rounded-full ${
-                        s.time_out ? 'bg-emerald-100 text-emerald-700'
-                          : s.time_in ? 'bg-amber-100 text-amber-700'
+                        a.status === 'present' ? 'bg-emerald-100 text-emerald-700'
+                          : a.status === 'absent' ? 'bg-red-100 text-red-700'
                           : 'bg-gray-100 text-gray-500'
                       }`}>
-                        {s.time_out ? `Completed ${formatTime(s.time_in)} – ${formatTime(s.time_out)}${s.auto_closed ? ' (auto 6PM)' : ''}`
-                          : s.time_in ? `On shift since ${formatTime(s.time_in)}`
-                          : 'Not started'}
+                        {a.status === 'present' ? 'Present' : a.status === 'absent' ? 'Absent' : 'Not marked'}
                       </span>
                     </div>
                   ))}
