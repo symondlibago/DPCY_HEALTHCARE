@@ -171,7 +171,7 @@ const drawReceipt = (doc, tx) => {
 
   y += 8;
   doc.setFontSize(7);
-  doc.text(doc.splitTextToSize('Thank you and get well soon!', contentWidth), pageWidth / 2, y, { align: 'center' });
+  doc.text(doc.splitTextToSize('Thank you for choosing DPCY Healthcare', contentWidth), pageWidth / 2, y, { align: 'center' });
 
   y += 4;
   doc.setFont('helvetica', 'italic');
