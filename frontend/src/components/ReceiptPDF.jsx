@@ -28,114 +28,114 @@ const peso = (n) =>
 const drawReceipt = (doc, tx) => {
   const pageWidth = PAPER_WIDTH;
   const contentWidth = pageWidth - MARGIN_X * 2;
-  let y = 8;
+  let y = 9;
 
   // --- HEADER ---
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(12);
+  doc.setFontSize(15);
   doc.text(CENTER_INFO.name, pageWidth / 2, y, { align: 'center' });
 
-  y += 5;
+  y += 6;
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
+  doc.setFontSize(9.5);
   const taglineLines = doc.splitTextToSize(CENTER_INFO.tagline, contentWidth);
   doc.text(taglineLines, pageWidth / 2, y, { align: 'center' });
-  y += (taglineLines.length - 1) * 3.5;
+  y += (taglineLines.length - 1) * 4.4;
 
   if (CENTER_INFO.address) {
-    y += 3.5;
-    doc.setFontSize(7);
+    y += 4.4;
+    doc.setFontSize(9);
     doc.text(doc.splitTextToSize(CENTER_INFO.address, contentWidth), pageWidth / 2, y, { align: 'center' });
   }
   if (CENTER_INFO.contact) {
-    y += 3.5;
-    doc.setFontSize(7);
+    y += 4.4;
+    doc.setFontSize(9);
     doc.text(CENTER_INFO.contact, pageWidth / 2, y, { align: 'center' });
   }
 
-  y += 5;
+  y += 6.5;
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8.5);
+  doc.setFontSize(11);
   doc.text('BILLING STATEMENT', pageWidth / 2, y, { align: 'center' });
 
-  y += 3;
+  y += 3.5;
   doc.setLineWidth(0.3);
   doc.line(MARGIN_X, y, pageWidth - MARGIN_X, y);
 
   // --- RECEIPT META + PATIENT INFO ---
-  y += 4.5;
+  y += 5.5;
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7.5);
+  doc.setFontSize(9.5);
 
   const txDate = tx.transaction_date ? new Date(tx.transaction_date).toLocaleDateString('en-PH') : '';
   doc.text(`Transaction No: ${tx.receipt_no || '—'}`, MARGIN_X, y);
-  y += 4;
+  y += 5;
   doc.text(`Date: ${txDate}`, MARGIN_X, y);
 
-  y += 4;
+  y += 5;
   const patientLines = doc.splitTextToSize(`Patient: ${tx.patient_name || ''}`, contentWidth);
   doc.text(patientLines, MARGIN_X, y);
-  y += (patientLines.length - 1) * 3.5;
+  y += (patientLines.length - 1) * 4.4;
 
   const ageSex = [tx.age ? `Age: ${tx.age}` : null, tx.sex ? `Sex: ${tx.sex}` : null]
     .filter(Boolean)
     .join('   ');
   if (ageSex) {
-    y += 4;
+    y += 5;
     doc.text(ageSex, MARGIN_X, y);
   }
 
   if (tx.discount_type && tx.discount_type !== 'Regular') {
-    y += 4;
+    y += 5;
     doc.setFont('helvetica', 'bold');
     doc.text(`${tx.discount_type} — ${Number(tx.discount_percent) || 20}% Discount`, MARGIN_X, y);
     doc.setFont('helvetica', 'normal');
   }
 
   if (tx.address) {
-    y += 4;
+    y += 5;
     const addrLines = doc.splitTextToSize(`Address: ${tx.address}`, contentWidth);
     doc.text(addrLines, MARGIN_X, y);
-    y += (addrLines.length - 1) * 3.5;
+    y += (addrLines.length - 1) * 4.4;
   }
 
   // --- ITEMS ---
-  y += 5;
+  y += 6;
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(7.5);
+  doc.setFontSize(9.5);
   doc.text('ITEM', MARGIN_X, y);
   doc.text('AMOUNT', pageWidth - MARGIN_X, y, { align: 'right' });
 
-  y += 2;
+  y += 2.5;
   doc.setLineWidth(0.2);
   doc.line(MARGIN_X, y, pageWidth - MARGIN_X, y);
 
-  y += 4;
+  y += 5;
   (tx.items || []).forEach((it) => {
     doc.setFont('helvetica', 'normal');
-    doc.setFontSize(7.5);
+    doc.setFontSize(9.5);
     const nameLines = doc.splitTextToSize(it.name, contentWidth);
     doc.text(nameLines, MARGIN_X, y);
-    y += nameLines.length * 3.5;
+    y += nameLines.length * 4.4;
 
-    doc.setFontSize(7);
+    doc.setFontSize(9);
     doc.text(`${it.qty} x ${peso(it.price)}`, MARGIN_X, y);
     doc.text(peso(it.subtotal), pageWidth - MARGIN_X, y, { align: 'right' });
-    y += 4.5;
+    y += 5.5;
   });
 
-  y += 0.5;
+  y += 1;
   doc.setLineWidth(0.2);
   doc.line(MARGIN_X, y, pageWidth - MARGIN_X, y);
 
   // --- TOTALS ---
-  y += 5;
-  const line = (label, value, bold = false, size = 7.5) => {
+  y += 6;
+  const line = (label, value, bold = false, size = 9.5) => {
     doc.setFont('helvetica', bold ? 'bold' : 'normal');
     doc.setFontSize(size);
-    doc.text(label, pageWidth - MARGIN_X - 22, y, { align: 'right' });
+    doc.text(label, pageWidth - MARGIN_X - 24, y, { align: 'right' });
     doc.text(peso(value), pageWidth - MARGIN_X, y, { align: 'right' });
-    y += 4.5;
+    y += 5.5;
   };
 
   line('Subtotal:', tx.subtotal);
@@ -146,36 +146,36 @@ const drawReceipt = (doc, tx) => {
       : 'Discount:';
     line(dLabel, tx.discount);
   }
-  line('TOTAL:', tx.total, true, 9);
+  line('TOTAL:', tx.total, true, 12);
   if (tx.amount_tendered != null && Number(tx.amount_tendered) > 0) {
     line('Tendered:', tx.amount_tendered);
     line('Change:', tx.change);
   }
 
   // --- FOOTER ---
-  y += 3;
+  y += 4;
   doc.setFont('helvetica', 'normal');
-  doc.setFontSize(7);
+  doc.setFontSize(9);
   doc.text(`Payment: ${tx.payment_method || 'Cash'}`, MARGIN_X, y);
   if (tx.cashier) {
-    y += 3.5;
+    y += 4.5;
     doc.text(`Cashier: ${tx.cashier}`, MARGIN_X, y);
   }
 
-  y += 10;
+  y += 12;
   doc.setLineWidth(0.2);
-  doc.line(pageWidth / 2 - 18, y, pageWidth / 2 + 18, y);
-  y += 3.5;
-  doc.setFontSize(7);
+  doc.line(pageWidth / 2 - 20, y, pageWidth / 2 + 20, y);
+  y += 4.5;
+  doc.setFontSize(9);
   doc.text('Authorized Signature', pageWidth / 2, y, { align: 'center' });
 
-  y += 8;
-  doc.setFontSize(7);
+  y += 9;
+  doc.setFontSize(9);
   doc.text(doc.splitTextToSize('Thank you for choosing DPCY Healthcare', contentWidth), pageWidth / 2, y, { align: 'center' });
 
-  y += 4;
+  y += 5;
   doc.setFont('helvetica', 'italic');
-  doc.setFontSize(6.5);
+  doc.setFontSize(8);
   doc.text(doc.splitTextToSize('FOR REFERENCE ONLY, NOT AN OFFICIAL INVOICE', contentWidth), pageWidth / 2, y, { align: 'center' });
   doc.setFont('helvetica', 'normal');
 
