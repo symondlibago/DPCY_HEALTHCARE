@@ -56,7 +56,7 @@ const drawReceipt = (doc, tx) => {
   y += 5;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8.5);
-  doc.text('OFFICIAL RECEIPT', pageWidth / 2, y, { align: 'center' });
+  doc.text('BILLING STATEMENT', pageWidth / 2, y, { align: 'center' });
 
   y += 3;
   doc.setLineWidth(0.3);
@@ -68,7 +68,7 @@ const drawReceipt = (doc, tx) => {
   doc.setFontSize(7.5);
 
   const txDate = tx.transaction_date ? new Date(tx.transaction_date).toLocaleDateString('en-PH') : '';
-  doc.text(`Receipt No: ${tx.receipt_no || '—'}`, MARGIN_X, y);
+  doc.text(`Transaction No: ${tx.receipt_no || '—'}`, MARGIN_X, y);
   y += 4;
   doc.text(`Date: ${txDate}`, MARGIN_X, y);
 
@@ -176,7 +176,7 @@ const drawReceipt = (doc, tx) => {
   y += 4;
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(6.5);
-  doc.text(doc.splitTextToSize('For reference only, not an official invoice', contentWidth), pageWidth / 2, y, { align: 'center' });
+  doc.text(doc.splitTextToSize('FOR REFERENCE ONLY, NOT AN OFFICIAL INVOICE', contentWidth), pageWidth / 2, y, { align: 'center' });
   doc.setFont('helvetica', 'normal');
 
   y += 6;
