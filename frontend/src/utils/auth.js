@@ -1,4 +1,5 @@
-export const API_BASE_URL = 'dpcy-database-production.up.railway.app';
+export const API_BASE_URL =
+  import.meta.env.VITE_API_URL || 'https://dpcy-database-production.up.railway.app/api';
 
 export const getAuthToken = () => localStorage.getItem('auth_token');
 export const getUser = () => {
