@@ -48,6 +48,43 @@ export const authenticatedRequest = async (url, options = {}) => {
     throw error;
   }
 };
+export const readResponse = async (res) => {
+  const status = res.status;
+  let text = '';
+  try { text = await res.text(); } catch { text = ''; }
+
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch { data = null; }
+
+  if (data && typeof data === 'object') {
+    return {
+      ok: res.ok && data.success !== false,
+      status,
+      data: data.data ?? data,
+      message: data.message || null,
+      errors: data.errors || null,
+    };
+  }
+
+  // Non-JSON response (HTML error page, empty body, etc.)
+  const looksHtml = /^\s*</.test(text);
+  return {
+    ok: false,
+    status,
+    data: null,
+    errors: null,
+    message: looksHtml
+      ? `The server returned an unexpected response (HTTP ${status}). The API address may be wrong, or that endpoint isn't available on the server.`
+      : (text ? text.slice(0, 300) : `Request failed (HTTP ${status}).`),
+  };
+};
+
+// Flatten a validation `errors` object into a single readable string.
+export const formatErrors = (errors, fallback = 'Something went wrong.') => {
+  if (!errors) return fallback;
+  const all = Object.values(errors).flat().filter(Boolean);
+  return all.length ? all.join('\n') : fallback;
+};
 
 // Generic REST helpers built on authenticatedRequest.
 const list = async (resource, params = '') => {

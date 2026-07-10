@@ -104,10 +104,10 @@ function Dashboard() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex justify-between items-center"
+        className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between"
       >
         <div>
-          <h1 className="text-4xl font-bold bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] bg-clip-text text-transparent">
+          <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-[var(--color-primary)] to-[var(--color-secondary)] bg-clip-text text-transparent">
             Dashboard Overview
           </h1>
           <p className="text-[var(--color-foreground)]/70 mt-2">Diagnostic &amp; Drug Testing Center — daily summary</p>

@@ -138,10 +138,10 @@ export default function Receipts() {
   const sexOptions = ['Male', 'Female'];
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="p-4 md:p-8 bg-gray-50 min-h-screen space-y-6">
+      <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">New Receipt</h1>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">New Receipt</h1>
           <p className="text-gray-500 mt-1">Register a patient, select services, and issue an official receipt.</p>
         </div>
       </div>

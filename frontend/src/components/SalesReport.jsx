@@ -63,10 +63,10 @@ export default function SalesReport() {
   };
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="p-4 md:p-8 bg-gray-50 min-h-screen space-y-6">
+      <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Sales Report</h1>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Sales Report</h1>
           <p className="text-gray-500 mt-1">Overall sales — daily, weekly, monthly, and yearly.</p>
         </div>
         <Button onClick={handleExport} disabled={!rows.length} className="bg-emerald-700 hover:bg-emerald-800 h-12 rounded-xl px-6">
@@ -144,7 +144,7 @@ export default function SalesReport() {
           {loading ? (
             <div className="p-20 flex justify-center"><Loader2 className="animate-spin text-emerald-700" /></div>
           ) : (
-            <table className="w-full text-left">
+            <div className="overflow-x-auto"><table className="w-full text-left min-w-[720px]">
               <thead className="bg-gray-50 border-b">
                 <tr>
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Period</th>
@@ -173,7 +173,7 @@ export default function SalesReport() {
                   </tr>
                 </tfoot>
               )}
-            </table>
+            </table></div>
           )}
         </CardContent>
       </Card>

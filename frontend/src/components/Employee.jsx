@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Loader2, Search, Edit2, Trash2, X } from 'lucide-react';
+import { Plus, Loader2, Search, Edit2, Trash2, X, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button.jsx';
 import { Card, CardContent } from '@/components/ui/card.jsx';
-import { getEmployees, createEmployee, updateEmployee, deleteEmployee } from '../utils/auth';
-import { CustomDatePicker } from './CustomInputs';
+import { getEmployees, createEmployee, updateEmployee, deleteEmployee, readResponse, formatErrors } from '../utils/auth';
+import { CustomDatePicker, SearchableSelect } from './CustomInputs';
 
 const emptyForm = () => ({
   id: null, id_number: '', name: '', position: '', sex: '', age: '',
@@ -21,6 +21,7 @@ export default function Employee() {
   const [modalOpen, setModalOpen] = useState(false);
   const [form, setForm] = useState(emptyForm());
   const [saving, setSaving] = useState(false);
+  const [formError, setFormError] = useState('');
 
   const fetchData = async () => {
     setLoading(true);
@@ -44,8 +45,9 @@ export default function Employee() {
       return matchSearch && matchRole;
     }), [employees, search, filterRole]);
 
-  const openAdd = () => { setForm(emptyForm()); setModalOpen(true); };
+  const openAdd = () => { setForm(emptyForm()); setFormError(''); setModalOpen(true); };
   const openEdit = (e) => {
+    setFormError('');
     setForm({
       id: e.id, id_number: e.id_number || '', name: e.name || '', position: e.position || '',
       sex: e.sex || '', age: e.age || '', birthday: e.birthday?.split('T')[0] || '',
@@ -58,12 +60,14 @@ export default function Employee() {
   };
 
   const handleSave = async () => {
-    if (!form.name.trim()) return alert('Please enter the employee name.');
-    if (!form.position.trim()) return alert('Please enter the position.');
+    setFormError('');
+    // Client-side checks
+    if (!form.name.trim()) return setFormError('Please enter the employee name.');
+    if (!form.position.trim()) return setFormError('Please enter the position.');
     if (form.create_account) {
-      if (!form.username.trim()) return alert('Please enter a username (email) for the login account.');
-      if (form.password.length < 8) return alert('Password must be at least 8 characters.');
-      if (form.password !== form.password_confirmation) return alert('Passwords do not match.');
+      if (!form.username.trim()) return setFormError('Please enter a username (email) for the login account.');
+      if (form.password.length < 8) return setFormError('Password must be at least 8 characters.');
+      if (form.password !== form.password_confirmation) return setFormError('Passwords do not match.');
     }
     setSaving(true);
     try {
@@ -87,19 +91,17 @@ export default function Employee() {
         payload.password_confirmation = form.password_confirmation;
         payload.role = form.account_role;
       }
-      let res;
-      if (form.id) res = await updateEmployee(form.id, payload);
-      else res = await createEmployee(payload);
-      const data = await res.json();
-      if (!data.success) {
-        const firstError = data.errors ? Object.values(data.errors)[0]?.[0] : null;
-        return alert(firstError || 'Failed to save employee.');
+      const res = await (form.id ? updateEmployee(form.id, payload) : createEmployee(payload));
+      const r = await readResponse(res);
+      if (!r.ok) {
+        setFormError(r.errors ? formatErrors(r.errors) : (r.message || 'Failed to save employee.'));
+        return;
       }
       setModalOpen(false);
       fetchData();
     } catch (e) {
       console.error(e);
-      alert('Failed to save employee.');
+      setFormError('Network error — could not reach the server. Check your connection or the API address.');
     } finally {
       setSaving(false);
     }
@@ -119,10 +121,10 @@ export default function Employee() {
   );
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen space-y-6">
-      <div className="flex justify-between items-center">
+    <div className="p-4 md:p-8 bg-gray-50 min-h-screen space-y-6">
+      <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Employees</h1>
+          <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Employees</h1>
           <p className="text-gray-500 mt-1">Add, edit, and manage staff records.</p>
         </div>
         <Button onClick={openAdd} className="bg-emerald-700 hover:bg-emerald-800 h-12 rounded-xl px-6"><Plus className="mr-2" /> Add Employee</Button>
@@ -138,12 +140,17 @@ export default function Employee() {
         </div>
         <div className="space-y-1.5">
           <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Account</label>
-          <select className="px-3 py-2.5 w-full border border-gray-300 rounded-xl text-sm bg-white" value={filterRole} onChange={(e) => setFilterRole(e.target.value)}>
-            <option value="All">All</option>
-            <option value="Staff">Staff</option>
-            <option value="Admin">Admin</option>
-            <option value="No Account">No Account</option>
-          </select>
+          <SearchableSelect
+            options={[
+              { label: 'All', value: 'All' },
+              { label: 'Staff', value: 'Staff' },
+              { label: 'Admin', value: 'Admin' },
+              { label: 'No Account', value: 'No Account' },
+            ]}
+            value={filterRole}
+            onChange={setFilterRole}
+            placeholder="Filter..."
+          />
         </div>
       </div>
 
@@ -152,7 +159,7 @@ export default function Employee() {
           {loading ? (
             <div className="p-20 flex justify-center"><Loader2 className="animate-spin text-emerald-700" /></div>
           ) : (
-            <table className="w-full text-left">
+            <div className="overflow-x-auto"><table className="w-full text-left min-w-[720px]">
               <thead className="bg-gray-50 border-b">
                 <tr>
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">ID</th>
@@ -191,7 +198,7 @@ export default function Employee() {
                   <tr><td colSpan={6} className="p-12 text-center text-sm text-gray-400">No employees found.</td></tr>
                 )}
               </tbody>
-            </table>
+            </table></div>
           )}
         </CardContent>
       </Card>
@@ -206,15 +213,24 @@ export default function Employee() {
                 <h3 className="font-bold text-gray-900">{form.id ? 'Edit Employee' : 'Add Employee'}</h3>
                 <button onClick={() => setModalOpen(false)} className="text-gray-400 hover:text-gray-700"><X className="h-5 w-5" /></button>
               </div>
+              {formError && (
+                <div className="mx-5 mt-4 flex items-start gap-2 p-3 rounded-xl bg-red-50 border border-red-200">
+                  <AlertCircle className="h-4 w-4 text-red-600 shrink-0 mt-0.5" />
+                  <p className="text-sm text-red-700 whitespace-pre-line">{formError}</p>
+                </div>
+              )}
               <div className="p-5 grid grid-cols-1 md:grid-cols-2 gap-4">
                 {field('ID Number', 'id_number', { placeholder: 'e.g. EMP-001' })}
                 {field('Full Name *', 'name', { placeholder: 'Full name' })}
                 {field('Position *', 'position', { placeholder: 'e.g. Medical Technologist' })}
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Sex</label>
-                  <select className="px-3 py-2.5 w-full border border-gray-300 rounded-xl text-sm bg-white" value={form.sex} onChange={(e) => setForm({ ...form, sex: e.target.value })}>
-                    <option value="">—</option><option value="Male">Male</option><option value="Female">Female</option>
-                  </select>
+                  <SearchableSelect
+                    options={[{ label: '—', value: '' }, { label: 'Male', value: 'Male' }, { label: 'Female', value: 'Female' }]}
+                    value={form.sex}
+                    onChange={(v) => setForm({ ...form, sex: v })}
+                    placeholder="Select..."
+                  />
                 </div>
                 {field('Age', 'age', { type: 'number', min: 0, placeholder: 'Age' })}
                 <div className="space-y-1.5">
@@ -262,10 +278,12 @@ export default function Employee() {
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Role</label>
-                          <select className="px-3 py-2.5 w-full border border-gray-300 rounded-xl text-sm bg-white" value={form.account_role} onChange={(e) => setForm({ ...form, account_role: e.target.value })}>
-                            <option value="staff">Staff</option>
-                            <option value="admin">Admin</option>
-                          </select>
+                          <SearchableSelect
+                            options={[{ label: 'Staff', value: 'staff' }, { label: 'Admin', value: 'admin' }]}
+                            value={form.account_role}
+                            onChange={(v) => setForm({ ...form, account_role: v })}
+                            placeholder="Select role..."
+                          />
                         </div>
                       </div>
                     )}

@@ -112,9 +112,9 @@ export default function AttendanceLog() {
   );
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen space-y-6">
+    <div className="p-4 md:p-8 bg-gray-50 min-h-screen space-y-6">
       <div>
-        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Attendance Log</h1>
+        <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Attendance Log</h1>
         <p className="text-gray-500 mt-1">Mark employee attendance as present or absent for any date, and review past records.</p>
       </div>
 
@@ -123,7 +123,7 @@ export default function AttendanceLog() {
         {quickButton('week', 'This Week')}
         {quickButton('month', 'This Month')}
         <div className="ml-auto">
-          <CustomDatePicker label="Specific Day" value={date} onChange={(v) => { setDate(v); setQuickFilter('custom'); }} />
+          <CustomDatePicker label="Specific Day" align="right" value={date} onChange={(v) => { setDate(v); setQuickFilter('custom'); }} />
         </div>
       </div>
 
@@ -140,7 +140,7 @@ export default function AttendanceLog() {
           {loading ? (
             <div className="p-20 flex justify-center"><Loader2 className="animate-spin text-emerald-700" /></div>
           ) : isLogView ? (
-            <table className="w-full text-left">
+            <div className="overflow-x-auto"><table className="w-full text-left min-w-[720px]">
               <thead className="bg-gray-50 border-b">
                 <tr>
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Date</th>
@@ -162,9 +162,9 @@ export default function AttendanceLog() {
                   <tr><td colSpan={4} className="p-12 text-center text-sm text-gray-400">No attendance records for this period.</td></tr>
                 )}
               </tbody>
-            </table>
+            </table></div>
           ) : (
-            <table className="w-full text-left">
+            <div className="overflow-x-auto"><table className="w-full text-left min-w-[720px]">
               <thead className="bg-gray-50 border-b">
                 <tr>
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">ID</th>
@@ -217,7 +217,7 @@ export default function AttendanceLog() {
                   <tr><td colSpan={6} className="p-12 text-center text-sm text-gray-400">No employees found.</td></tr>
                 )}
               </tbody>
-            </table>
+            </table></div>
           )}
         </CardContent>
       </Card>

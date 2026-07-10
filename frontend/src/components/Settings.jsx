@@ -70,9 +70,9 @@ function SuperAdminSettings() {
   };
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen space-y-6">
+    <div className="p-4 md:p-8 bg-gray-50 min-h-screen space-y-6">
       <div>
-        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Settings</h1>
+        <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Settings</h1>
         <p className="text-gray-500 mt-1">Manage user accounts and reset passwords.</p>
       </div>
 
@@ -91,7 +91,7 @@ function SuperAdminSettings() {
           {loading ? (
             <div className="p-20 flex justify-center"><Loader2 className="animate-spin text-emerald-700" /></div>
           ) : (
-            <table className="w-full text-left">
+            <div className="overflow-x-auto"><table className="w-full text-left min-w-[720px]">
               <thead className="bg-gray-50 border-b">
                 <tr>
                   <th className="p-5 text-[11px] font-bold text-gray-500 uppercase">Name</th>
@@ -121,7 +121,7 @@ function SuperAdminSettings() {
                   <tr><td colSpan={4} className="p-12 text-center text-sm text-gray-400">No users found.</td></tr>
                 )}
               </tbody>
-            </table>
+            </table></div>
           )}
         </CardContent>
       </Card>
@@ -194,9 +194,9 @@ function SelfServiceSettings({ user }) {
   };
 
   return (
-    <div className="p-8 bg-gray-50 min-h-screen space-y-6">
+    <div className="p-4 md:p-8 bg-gray-50 min-h-screen space-y-6">
       <div>
-        <h1 className="text-4xl font-extrabold text-gray-900 tracking-tight">Settings</h1>
+        <h1 className="text-3xl md:text-4xl font-extrabold text-gray-900 tracking-tight">Settings</h1>
         <p className="text-gray-500 mt-1">Manage your account.</p>
       </div>
 
