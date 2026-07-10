@@ -173,6 +173,12 @@ const drawReceipt = (doc, tx) => {
   doc.setFontSize(7);
   doc.text(doc.splitTextToSize('Thank you and get well soon!', contentWidth), pageWidth / 2, y, { align: 'center' });
 
+  y += 4;
+  doc.setFont('helvetica', 'italic');
+  doc.setFontSize(6.5);
+  doc.text(doc.splitTextToSize('For reference only, not an official invoice', contentWidth), pageWidth / 2, y, { align: 'center' });
+  doc.setFont('helvetica', 'normal');
+
   y += 6;
   return y;
 };
