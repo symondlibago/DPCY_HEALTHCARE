@@ -1,4 +1,4 @@
-export const API_BASE_URL = 'http://127.0.0.1:8000/api';
+export const API_BASE_URL = 'dpcy-database-production.up.railway.app';
 
 export const getAuthToken = () => localStorage.getItem('auth_token');
 export const getUser = () => {
