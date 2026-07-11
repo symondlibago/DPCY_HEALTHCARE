@@ -16,7 +16,8 @@ import {
   Settings as SettingsIcon,
   UserCheck,
   BarChart3,
-  HeartHandshake
+  HeartHandshake,
+  BadgePercent
 } from 'lucide-react'
 import { Button } from '@/components/ui/button.jsx'
 import logo from './assets/logo2.png'
@@ -31,6 +32,7 @@ import Expenses from './components/Expenses'
 import Services from './components/Services'
 import Employee from './components/Employee'
 import DiscountEnrollees from './components/DiscountEnrollees'
+import YakapEnrollees from './components/YakapEnrollees'
 import AttendanceLog from './components/AttendanceLog'
 import SalesReport from './components/SalesReport'
 import Settings from './components/Settings'
@@ -45,7 +47,8 @@ const navigationItems = [
   { path: '/sales-report', icon: BarChart3, label: 'Sales Report', color: 'text-white', roles: ['admin', 'super_admin'] },
   { path: '/expenses', icon: Wallet, label: 'Daily Expenses', color: 'text-white', roles: ['admin', 'staff', 'super_admin'] },
   { path: '/services', icon: Stethoscope, label: 'Services', color: 'text-white', roles: ['admin', 'staff', 'super_admin'] },
-  { path: '/discount-enrollees', icon: HeartHandshake, label: 'Discount Enrollees', color: 'text-white', roles: ['admin', 'super_admin'] },
+  { path: '/discount-enrollees', icon: BadgePercent, label: 'Discounts', color: 'text-white', roles: ['admin', 'super_admin'] },
+  { path: '/yakap-enrollees', icon: HeartHandshake, label: 'Yakap Enrollees', color: 'text-white', roles: ['admin', 'super_admin'] },
   { path: '/employees', icon: Users, label: 'Employee Management', color: 'text-white', roles: ['super_admin'] },
   { path: '/attendance', icon: UserCheck, label: 'Attendance Log', color: 'text-white', roles: ['admin', 'super_admin'] },
   { path: '/settings', icon: SettingsIcon, label: 'Settings', color: 'text-white', roles: ['admin', 'staff', 'super_admin'] },
@@ -274,6 +277,7 @@ function MainContent({ sidebarCollapsed, onLogout, isMobile, userRole }) {
           <Route path="/expenses" element={<ProtectedComponent component={Expenses} allowedRoles={['admin', 'staff', 'super_admin']} />} />
           <Route path="/services" element={<ProtectedComponent component={Services} allowedRoles={['admin', 'staff', 'super_admin']} />} />
           <Route path="/discount-enrollees" element={<ProtectedComponent component={DiscountEnrollees} allowedRoles={['admin', 'super_admin']} />} />
+          <Route path="/yakap-enrollees" element={<ProtectedComponent component={YakapEnrollees} allowedRoles={['admin', 'super_admin']} />} />
           <Route path="/employees" element={<ProtectedComponent component={Employee} allowedRoles={['super_admin']} />} />
           <Route path="/attendance" element={<ProtectedComponent component={AttendanceLog} allowedRoles={['admin', 'super_admin']} />} />
           <Route path="/settings" element={<ProtectedComponent component={Settings} allowedRoles={['admin', 'staff', 'super_admin']} />} />

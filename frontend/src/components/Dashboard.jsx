@@ -13,6 +13,7 @@ import {
   UserCheck,
   UserX,
   MinusCircle,
+  BadgePercent,
   HeartHandshake
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.jsx'
@@ -48,7 +49,7 @@ function Dashboard() {
   const [recentTx, setRecentTx] = useState([])
   const [recentExp, setRecentExp] = useState([])
   const [attendance, setAttendance] = useState([])
-  const [enrolleeStats, setEnrolleeStats] = useState({ total: 0, by_type: { PWD: 0, Senior: 0, 'Yakap Member': 0 } })
+  const [enrolleeStats, setEnrolleeStats] = useState({ total: 0, by_type: { PWD: 0, Senior: 0, 'Yakap Member': 0 }, yakap_manual: 0 })
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState(null)
 
@@ -61,7 +62,7 @@ function Dashboard() {
         getExpenses(`?date=${today}`),
         getServices(),
         canViewEmployees ? getAttendance(`?date=${today}`) : Promise.resolve([]),
-        canViewEmployees ? getDiscountEnrolleeStats() : Promise.resolve({ total: 0, by_type: { PWD: 0, Senior: 0, 'Yakap Member': 0 } })
+        canViewEmployees ? getDiscountEnrolleeStats() : Promise.resolve({ total: 0, by_type: { PWD: 0, Senior: 0, 'Yakap Member': 0 }, yakap_manual: 0 })
       ])
 
       const revenue = txs.reduce((s, t) => s + Number(t.total || 0), 0)
@@ -191,15 +192,32 @@ function Dashboard() {
         )}
       </div>
 
-      {/* Discount Enrollees (PWD / Senior / Yakap Member) */}
+      {/* Yakap Member Verified (manual enrollments only) */}
       {canViewEmployees && (
         <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.25 }}>
+          <Card className="bg-emerald-50/40 border border-emerald-100/70 shadow-sm">
+            <CardContent className="p-5 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <HeartHandshake className="h-5 w-5 text-[var(--color-primary)]" />
+                <p className="text-sm font-medium text-[var(--color-foreground)]/70">Yakap Member Verified</p>
+              </div>
+              <p className="text-2xl font-bold text-[var(--color-foreground)]">
+                {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : enrolleeStats.yakap_manual ?? 0}
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
+
+      {/* Discount Enrollees (PWD / Senior / Yakap Member) */}
+      {canViewEmployees && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.27 }}>
           <Card className="bg-[var(--color-card)] border border-[var(--color-border)] shadow-md">
             <CardContent className="p-5">
               <div className="flex items-center justify-between mb-4">
                 <div className="flex items-center gap-2">
-                  <HeartHandshake className="h-5 w-5 text-[var(--color-primary)]" />
-                  <p className="text-sm font-medium text-[var(--color-foreground)]/70">Discount Enrollees</p>
+                  <BadgePercent className="h-5 w-5 text-[var(--color-primary)]" />
+                  <p className="text-sm font-medium text-[var(--color-foreground)]/70">Discounts</p>
                 </div>
                 <p className="text-2xl font-bold text-[var(--color-foreground)]">
                   {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : enrolleeStats.total}
