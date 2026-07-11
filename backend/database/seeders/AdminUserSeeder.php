@@ -11,7 +11,7 @@ class AdminUserSeeder extends Seeder
     public function run(): void
     {
         User::updateOrCreate(
-            ['email' => 'admin@dpcy.com'],
+            ['email' => 'admin@dpcyhealthcare'],
             [
                 'name' => 'DPCY Admin',
                 'password' => Hash::make('password'),

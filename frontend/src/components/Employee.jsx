@@ -65,7 +65,7 @@ export default function Employee() {
     if (!form.name.trim()) return setFormError('Please enter the employee name.');
     if (!form.position.trim()) return setFormError('Please enter the position.');
     if (form.create_account) {
-      if (!form.username.trim()) return setFormError('Please enter a username (email) for the login account.');
+      if (!form.username.trim()) return setFormError('Please enter a username for the login account.');
       if (form.password.length < 8) return setFormError('Password must be at least 8 characters.');
       if (form.password !== form.password_confirmation) return setFormError('Passwords do not match.');
     }
@@ -265,8 +265,8 @@ export default function Employee() {
                     {form.create_account && (
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div className="md:col-span-2 space-y-1.5">
-                          <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Username (Email) *</label>
-                          <input type="email" className="px-4 py-2.5 w-full border border-gray-300 rounded-xl text-sm" placeholder="employee@dpcy.com" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
+                          <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Username *</label>
+                          <input type="text" className="px-4 py-2.5 w-full border border-gray-300 rounded-xl text-sm" placeholder="e.g. staff@dpcyhealthcare" value={form.username} onChange={(e) => setForm({ ...form, username: e.target.value })} />
                         </div>
                         <div className="space-y-1.5">
                           <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Password *</label>

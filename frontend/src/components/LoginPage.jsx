@@ -117,16 +117,16 @@ const LoginPage = ({ onLogin }) => {
               onSubmit={handleLogin}
               className="space-y-6"
             >
-              {/* Email Field */}
+              {/* Username Field */}
               <div className="space-y-2">
                 <label className="text-xs font-bold text-gray-500 uppercase tracking-wider ml-1">
-                  Email Address
+                  Username
                 </label>
                 <div className="relative group">
                   <User className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 z-10 text-gray-400 group-focus-within:text-emerald-600 transition-colors" />
                   <Input
-                    type="email"
-                    placeholder="name@company.com"
+                    type="text"
+                    placeholder="admin@dpcyhealthcare"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="enhanced-input pl-12 h-12 bg-gray-50/50 border-gray-200 text-gray-900 placeholder-gray-400 focus:bg-white focus:border-emerald-500 focus:ring-4 focus:ring-emerald-500/10 rounded-xl transition-all duration-300"

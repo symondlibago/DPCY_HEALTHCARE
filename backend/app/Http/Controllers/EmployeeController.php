@@ -93,7 +93,7 @@ class EmployeeController extends Controller
     private function validateAccount(Request $request)
     {
         $accountValidator = Validator::make($request->all(), [
-            'username' => 'required|email|unique:users,email',
+            'username' => 'required|string|max:255|unique:users,email',
             'password' => 'required|string|min:8|confirmed',
             'role' => 'required|in:staff,admin',
         ]);
