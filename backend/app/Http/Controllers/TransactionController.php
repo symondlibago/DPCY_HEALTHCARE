@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\Transaction;
+use App\Models\DiscountEnrollee;
 
 class TransactionController extends Controller
 {
@@ -110,6 +111,21 @@ class TransactionController extends Controller
             $datePart = date('Ymd', strtotime($request->transaction_date));
             $transaction->receipt_no = 'DPCY-' . $datePart . '-' . str_pad($transaction->id, 5, '0', STR_PAD_LEFT);
             $transaction->save();
+
+            // PWD / Senior / Yakap Member receipts automatically register the
+            // patient as a discount enrollee, so the dashboard overview and
+            // the enrollee registry stay in sync with issued receipts.
+            if ($isSpecial) {
+                DiscountEnrollee::create([
+                    'patient_name' => $transaction->patient_name,
+                    'age' => $transaction->age,
+                    'sex' => $transaction->sex,
+                    'address' => $transaction->address,
+                    'discount_type' => $discountType,
+                    'transaction_id' => $transaction->id,
+                    'receipt_no' => $transaction->receipt_no,
+                ]);
+            }
 
             return response()->json(['success' => true, 'data' => $transaction], 201);
         } catch (\Exception $e) {

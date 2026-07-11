@@ -137,6 +137,17 @@ export const getSalesReport = async (params = '') => {
   return res.json();
 };
 
+// DISCOUNT ENROLLEES (PWD / Senior / Yakap Member registry, admin + super admin)
+export const getDiscountEnrollees = (params = '') => list('discount-enrollees', params);
+export const createDiscountEnrollee = (data) => create('discount-enrollees', data);
+export const updateDiscountEnrollee = (id, data) => update('discount-enrollees', id, data);
+export const deleteDiscountEnrollee = (id) => remove('discount-enrollees', id);
+export const getDiscountEnrolleeStats = async () => {
+  const res = await authenticatedRequest('/discount-enrollees/stats');
+  const data = await res.json();
+  return data.success ? data.data : { total: 0, by_type: { PWD: 0, Senior: 0, 'Yakap Member': 0 } };
+};
+
 // USERS (super admin only)
 export const getUsers = () => list('users');
 export const resetUserPassword = (id, data) => create(`users/${id}/reset-password`, data);

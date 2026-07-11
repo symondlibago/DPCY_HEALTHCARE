@@ -9,6 +9,7 @@ use App\Http\Controllers\ExpenseController;
 use App\Http\Controllers\UserController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\DiscountEnrolleeController;
 
 /*
 |--------------------------------------------------------------------------
@@ -42,6 +43,13 @@ Route::middleware('auth:sanctum')->group(function () {
     // Sales reports (daily/weekly/monthly/yearly): admin + super admin
     Route::middleware('role:admin,super_admin')->group(function () {
         Route::get('/reports/sales', [ReportController::class, 'sales']);
+    });
+
+    // PWD / Senior / Yakap Member discount enrollee registry (auto-populated
+    // from receipts) and dashboard counts: admin + super admin
+    Route::middleware('role:admin,super_admin')->group(function () {
+        Route::get('/discount-enrollees/stats', [DiscountEnrolleeController::class, 'stats']);
+        Route::apiResource('discount-enrollees', DiscountEnrolleeController::class);
     });
 
     // Employee attendance tracking (present/absent per day): admin + super admin

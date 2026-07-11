@@ -12,11 +12,12 @@ import {
   Coins,
   UserCheck,
   UserX,
-  MinusCircle
+  MinusCircle,
+  HeartHandshake
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Button } from '@/components/ui/button.jsx'
-import { getTransactions, getExpenses, getServices, getAttendance, getUser } from '../utils/auth'
+import { getTransactions, getExpenses, getServices, getAttendance, getUser, getDiscountEnrolleeStats } from '../utils/auth'
 
 const formatCurrency = (amount) =>
   `₱${Number(amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
@@ -47,6 +48,7 @@ function Dashboard() {
   const [recentTx, setRecentTx] = useState([])
   const [recentExp, setRecentExp] = useState([])
   const [attendance, setAttendance] = useState([])
+  const [enrolleeStats, setEnrolleeStats] = useState({ total: 0, by_type: { PWD: 0, Senior: 0, 'Yakap Member': 0 } })
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState(null)
 
@@ -54,11 +56,12 @@ function Dashboard() {
     setLoading(true)
     try {
       const today = todayStr()
-      const [txs, exps, services, attendanceRows] = await Promise.all([
+      const [txs, exps, services, attendanceRows, enrolleeStatsRes] = await Promise.all([
         getTransactions(`?date=${today}`),
         getExpenses(`?date=${today}`),
         getServices(),
-        canViewEmployees ? getAttendance(`?date=${today}`) : Promise.resolve([])
+        canViewEmployees ? getAttendance(`?date=${today}`) : Promise.resolve([]),
+        canViewEmployees ? getDiscountEnrolleeStats() : Promise.resolve({ total: 0, by_type: { PWD: 0, Senior: 0, 'Yakap Member': 0 } })
       ])
 
       const revenue = txs.reduce((s, t) => s + Number(t.total || 0), 0)
@@ -74,6 +77,7 @@ function Dashboard() {
       setRecentTx(txs.slice(0, 5))
       setRecentExp(exps.slice(0, 5))
       setAttendance(attendanceRows)
+      setEnrolleeStats(enrolleeStatsRes)
       setLastUpdated(new Date())
     } catch (e) {
       console.error('Dashboard error:', e)
@@ -186,6 +190,39 @@ function Dashboard() {
           </Card>
         )}
       </div>
+
+      {/* Discount Enrollees (PWD / Senior / Yakap Member) */}
+      {canViewEmployees && (
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.25 }}>
+          <Card className="bg-[var(--color-card)] border border-[var(--color-border)] shadow-md">
+            <CardContent className="p-5">
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <HeartHandshake className="h-5 w-5 text-[var(--color-primary)]" />
+                  <p className="text-sm font-medium text-[var(--color-foreground)]/70">Discount Enrollees</p>
+                </div>
+                <p className="text-2xl font-bold text-[var(--color-foreground)]">
+                  {loading ? <Loader2 className="h-5 w-5 animate-spin" /> : enrolleeStats.total}
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="p-3 rounded-lg bg-blue-50 border border-blue-100 text-center">
+                  <p className="text-xs text-blue-700/70">PWD</p>
+                  <p className="text-lg font-bold text-blue-900">{enrolleeStats.by_type?.PWD ?? 0}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-amber-50 border border-amber-100 text-center">
+                  <p className="text-xs text-amber-700/70">Senior</p>
+                  <p className="text-lg font-bold text-amber-900">{enrolleeStats.by_type?.Senior ?? 0}</p>
+                </div>
+                <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-100 text-center">
+                  <p className="text-xs text-emerald-700/70">Yakap Member</p>
+                  <p className="text-lg font-bold text-emerald-900">{enrolleeStats.by_type?.['Yakap Member'] ?? 0}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      )}
 
       {/* Attendance Monitoring Logs */}
       {canViewEmployees && (
