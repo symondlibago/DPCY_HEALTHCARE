@@ -9,8 +9,9 @@ use App\Models\DiscountEnrollee;
 class DiscountEnrolleeController extends Controller
 {
     /**
-     * List discount enrollees. Supports ?type=PWD|Senior|Yakap Member and
-     * ?search=<name> (used by the Discount Enrollees management screen).
+     * List discount enrollees. Supports ?type=PWD|Senior|Yakap Member,
+     * ?search=<name>, and ?manual=1 (used by the Yakap Enrollees screen to
+     * show only manually verified members, excluding receipt auto-adds).
      */
     public function index(Request $request)
     {
@@ -22,6 +23,10 @@ class DiscountEnrolleeController extends Controller
 
         if ($request->filled('search')) {
             $query->where('patient_name', 'like', '%' . $request->search . '%');
+        }
+
+        if ($request->boolean('manual')) {
+            $query->whereNull('transaction_id');
         }
 
         $enrollees = $query->orderBy('created_at', 'desc')->get();
@@ -45,13 +50,37 @@ class DiscountEnrolleeController extends Controller
             'Yakap Member' => (int) ($counts['Yakap Member'] ?? 0),
         ];
 
+        $yakapManual = DiscountEnrollee::query()
+            ->where('discount_type', 'Yakap Member')
+            ->whereNull('transaction_id')
+            ->count();
+
         return response()->json([
             'success' => true,
             'data' => [
                 'total' => array_sum($byType),
                 'by_type' => $byType,
+                'yakap_manual' => $yakapManual,
             ],
         ]);
+    }
+
+    /**
+     * Prevents the same person from being registered as a Yakap Member twice
+     * (name match, case-insensitive) so the manual count reflects one entry
+     * per verified member. $excludeId is passed when editing an existing row.
+     */
+    private function isDuplicateYakapMember(string $patientName, $excludeId = null): bool
+    {
+        $query = DiscountEnrollee::query()
+            ->where('discount_type', 'Yakap Member')
+            ->whereRaw('LOWER(patient_name) = ?', [strtolower(trim($patientName))]);
+
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+
+        return $query->exists();
     }
 
     public function store(Request $request)
@@ -67,6 +96,13 @@ class DiscountEnrolleeController extends Controller
 
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        if ($request->discount_type === 'Yakap Member' && $this->isDuplicateYakapMember($request->patient_name)) {
+            return response()->json([
+                'success' => false,
+                'errors' => ['patient_name' => ['This person is already registered as a Yakap Member.']],
+            ], 422);
         }
 
         $enrollee = DiscountEnrollee::create([
@@ -108,6 +144,15 @@ class DiscountEnrolleeController extends Controller
 
         if ($validator->fails()) {
             return response()->json(['success' => false, 'errors' => $validator->errors()], 422);
+        }
+
+        $newType = $request->discount_type ?? $enrollee->discount_type;
+        $newName = $request->patient_name ?? $enrollee->patient_name;
+        if ($newType === 'Yakap Member' && $this->isDuplicateYakapMember($newName, $enrollee->id)) {
+            return response()->json([
+                'success' => false,
+                'errors' => ['patient_name' => ['This person is already registered as a Yakap Member.']],
+            ], 422);
         }
 
         $enrollee->update($request->only([
