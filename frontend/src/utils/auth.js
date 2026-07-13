@@ -148,6 +148,16 @@ export const getDiscountEnrolleeStats = async () => {
   return data.success ? data.data : { total: 0, by_type: { PWD: 0, Senior: 0, 'Yakap Member': 0 } };
 };
 
+// YAKAP SETTINGS (manually entered enrollee total, admin + super admin)
+export const getYakapSettings = async () => {
+  const res = await authenticatedRequest('/yakap-settings');
+  const data = await res.json();
+  return data.success ? data.data : { manual_count: 0 };
+};
+export const updateYakapSettings = (data) => authenticatedRequest('/yakap-settings', {
+  method: 'PUT', body: JSON.stringify(data),
+});
+
 // USERS (super admin only)
 export const getUsers = () => list('users');
 export const resetUserPassword = (id, data) => create(`users/${id}/reset-password`, data);
