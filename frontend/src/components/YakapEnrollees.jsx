@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Loader2, ShieldCheck, Save } from 'lucide-react';
 import { Button } from '@/components/ui/button.jsx';
 import { Card, CardContent } from '@/components/ui/card.jsx';
-import { getYakapSettings, updateYakapSettings, readResponse, formatErrors } from '../utils/auth';
+import { getYakapSettings, updateYakapSettings, readResponse, formatErrors } from 'src/utils/auth';
 
 export default function YakapEnrollees() {
   const [count, setCount] = useState('0');
