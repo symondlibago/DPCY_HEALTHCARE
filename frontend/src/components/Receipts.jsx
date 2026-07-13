@@ -29,7 +29,7 @@ export default function Receipts() {
   const [lastSaved, setLastSaved] = useState(null);
 
   // Patient (per-visit)
-  const [patient, setPatient] = useState({ name: '', age: '', sex: '', address: '' });
+  const [patient, setPatient] = useState({ name: '', age: '', birthdate: '', sex: '', address: '' });
   const [txDate, setTxDate] = useState(todayStr());
 
   // Cart: { service_id, name, price, qty }
@@ -83,7 +83,7 @@ export default function Receipts() {
   const change = tendered ? Math.max(Number(tendered) - total, 0) : 0;
 
   const resetForm = () => {
-    setPatient({ name: '', age: '', sex: '', address: '' });
+    setPatient({ name: '', age: '', birthdate: '', sex: '', address: '' });
     setItems([]);
     setDiscount('');
     setDiscountType('Regular');
@@ -102,6 +102,7 @@ export default function Receipts() {
       const payload = {
         patient_name: patient.name.trim(),
         age: patient.age ? Number(patient.age) : null,
+        birthdate: patient.birthdate || null,
         sex: patient.sex || null,
         address: patient.address || null,
         transaction_date: txDate,
@@ -200,6 +201,10 @@ export default function Receipts() {
                 <div className="md:col-span-2 space-y-1.5">
                   <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Address</label>
                   <input className="px-4 py-2.5 w-full border border-gray-300 rounded-xl text-sm" placeholder="Address" value={patient.address} onChange={(e) => setPatient({ ...patient, address: e.target.value })} />
+                </div>
+                <div className="space-y-1.5">
+                  <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Birthdate</label>
+                  <input className="px-4 py-2.5 w-full border border-gray-300 rounded-xl text-sm" placeholder="MM/DD/YYYY" value={patient.birthdate} onChange={(e) => setPatient({ ...patient, birthdate: e.target.value })} />
                 </div>
                 <div className="space-y-1.5">
                   <label className="text-[11px] font-bold text-gray-500 uppercase ml-1">Date</label>

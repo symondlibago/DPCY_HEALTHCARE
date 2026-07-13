@@ -37,6 +37,7 @@ class TransactionController extends Controller
         $validator = Validator::make($request->all(), [
             'patient_name' => 'required|string|max:255',
             'age' => 'nullable|integer|min:0',
+            'birthdate' => 'nullable|string|max:50',
             'sex' => 'nullable|string|max:20',
             'address' => 'nullable|string',
             'transaction_date' => 'required|date',
@@ -91,6 +92,7 @@ class TransactionController extends Controller
                 'receipt_no' => 'TMP',
                 'patient_name' => $request->patient_name,
                 'age' => $request->age,
+                'birthdate' => $request->birthdate,
                 'sex' => $request->sex,
                 'address' => $request->address,
                 'transaction_date' => $request->transaction_date,
@@ -152,7 +154,7 @@ class TransactionController extends Controller
         // Allow light edits (patient info / notes). Line items are immutable
         // once a receipt is issued to keep the receipt trail trustworthy.
         $transaction->update($request->only([
-            'patient_name', 'age', 'sex', 'address', 'notes', 'payment_method',
+            'patient_name', 'age', 'birthdate', 'sex', 'address', 'notes', 'payment_method',
         ]));
 
         return response()->json(['success' => true, 'data' => $transaction]);

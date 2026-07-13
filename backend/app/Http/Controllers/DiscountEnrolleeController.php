@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 use App\Models\DiscountEnrollee;
+use App\Models\YakapSetting;
 
 class DiscountEnrolleeController extends Controller
 {
@@ -50,10 +51,9 @@ class DiscountEnrolleeController extends Controller
             'Yakap Member' => (int) ($counts['Yakap Member'] ?? 0),
         ];
 
-        $yakapManual = DiscountEnrollee::query()
-            ->where('discount_type', 'Yakap Member')
-            ->whereNull('transaction_id')
-            ->count();
+        // Yakap enrollees are entered as a single staff-typed total rather than
+        // individual records (see YakapSettingController).
+        $yakapManual = (int) (YakapSetting::first()->manual_count ?? 0);
 
         return response()->json([
             'success' => true,

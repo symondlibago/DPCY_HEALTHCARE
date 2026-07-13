@@ -174,6 +174,7 @@ export default function TransactionHistory() {
                   <div><p className="text-[11px] text-gray-400 uppercase font-bold">Date</p><p className="font-semibold">{new Date(viewTx.transaction_date).toLocaleDateString('en-PH')}</p></div>
                   <div><p className="text-[11px] text-gray-400 uppercase font-bold">Age / Sex</p><p className="font-semibold">{viewTx.age || '—'} / {viewTx.sex || '—'}</p></div>
                   <div><p className="text-[11px] text-gray-400 uppercase font-bold">Payment</p><p className="font-semibold">{viewTx.payment_method}</p></div>
+                  {viewTx.birthdate && <div><p className="text-[11px] text-gray-400 uppercase font-bold">Birthdate</p><p className="font-semibold">{viewTx.birthdate}</p></div>}
                 </div>
                 {viewTx.address && <div><p className="text-[11px] text-gray-400 uppercase font-bold">Address</p><p className="font-semibold">{viewTx.address}</p></div>}
                 <div className="border-t pt-3 space-y-1">

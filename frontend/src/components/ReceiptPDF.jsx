@@ -85,6 +85,11 @@ const drawReceipt = (doc, tx) => {
     doc.text(ageSex, MARGIN_X, y);
   }
 
+  if (tx.birthdate) {
+    y += 5;
+    doc.text(`Birthdate: ${tx.birthdate}`, MARGIN_X, y);
+  }
+
   if (tx.discount_type && tx.discount_type !== 'Regular') {
     y += 5;
     doc.setFont('helvetica', 'bold');
