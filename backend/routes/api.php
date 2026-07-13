@@ -10,6 +10,7 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\ReportController;
 use App\Http\Controllers\DiscountEnrolleeController;
+use App\Http\Controllers\YakapSettingController;
 
 /*
 |--------------------------------------------------------------------------
@@ -50,6 +51,10 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('role:admin,super_admin')->group(function () {
         Route::get('/discount-enrollees/stats', [DiscountEnrolleeController::class, 'stats']);
         Route::apiResource('discount-enrollees', DiscountEnrolleeController::class);
+
+        // Manually entered Yakap enrollee total (Yakap Enrollees screen), reflected on the Dashboard.
+        Route::get('/yakap-settings', [YakapSettingController::class, 'show']);
+        Route::put('/yakap-settings', [YakapSettingController::class, 'update']);
     });
 
     // Employee attendance tracking (present/absent per day): admin + super admin
