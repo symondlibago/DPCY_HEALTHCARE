@@ -14,19 +14,41 @@ import {
   UserX,
   MinusCircle,
   BadgePercent,
-  HeartHandshake
+  HeartHandshake,
+  BarChart3
 } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card.jsx'
 import { Button } from '@/components/ui/button.jsx'
-import { getTransactions, getExpenses, getServices, getAttendance, getUser, getDiscountEnrolleeStats } from '../utils/auth'
+import { getTransactions, getExpenses, getServices, getAttendance, getUser, getDiscountEnrolleeStats, getServiceStats } from '../utils/auth'
+import { CustomDatePicker } from './CustomInputs'
 
 const formatCurrency = (amount) =>
   `₱${Number(amount || 0).toLocaleString('en-PH', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 
-const todayStr = () => {
-  const d = new Date()
+const toLocalDateStr = (d) => {
   const off = d.getTimezoneOffset()
   return new Date(d.getTime() - off * 60000).toISOString().split('T')[0]
+}
+
+const todayStr = () => toLocalDateStr(new Date())
+
+const getWeekRange = () => {
+  const now = new Date()
+  const day = now.getDay()
+  const diffToMonday = day === 0 ? -6 : 1 - day
+  const monday = new Date(now)
+  monday.setDate(now.getDate() + diffToMonday)
+  const sunday = new Date(monday)
+  sunday.setDate(monday.getDate() + 6)
+  return [toLocalDateStr(monday), toLocalDateStr(sunday)]
+}
+
+const getMonthRange = () => {
+  const now = new Date()
+  return [
+    toLocalDateStr(new Date(now.getFullYear(), now.getMonth(), 1)),
+    toLocalDateStr(new Date(now.getFullYear(), now.getMonth() + 1, 0)),
+  ]
 }
 
 const formatTimeAgo = (dateString) => {
@@ -52,6 +74,36 @@ function Dashboard() {
   const [enrolleeStats, setEnrolleeStats] = useState({ total: 0, by_type: { PWD: 0, Senior: 0, 'Yakap Member': 0 }, yakap_manual: 0 })
   const [loading, setLoading] = useState(true)
   const [lastUpdated, setLastUpdated] = useState(null)
+
+  // Service availment panel (own range filter, independent of the daily cards)
+  const [svcQuick, setSvcQuick] = useState('today') // 'today' | 'week' | 'month' | 'custom'
+  const [svcFrom, setSvcFrom] = useState(todayStr())
+  const [svcTo, setSvcTo] = useState(todayStr())
+  const [svcStats, setSvcStats] = useState({ data: [], total_availed: 0, total_revenue: 0 })
+  const [svcLoading, setSvcLoading] = useState(true)
+
+  const applySvcQuick = (key) => {
+    setSvcQuick(key)
+    if (key === 'today') { const t = todayStr(); setSvcFrom(t); setSvcTo(t) }
+    else if (key === 'week') { const [f, t] = getWeekRange(); setSvcFrom(f); setSvcTo(t) }
+    else if (key === 'month') { const [f, t] = getMonthRange(); setSvcFrom(f); setSvcTo(t) }
+  }
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      setSvcLoading(true)
+      try {
+        const res = await getServiceStats(`?from=${svcFrom}&to=${svcTo}`)
+        if (!cancelled) setSvcStats(res)
+      } catch (e) {
+        console.error('Service stats error:', e)
+      } finally {
+        if (!cancelled) setSvcLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [svcFrom, svcTo])
 
   const fetchData = useCallback(async () => {
     setLoading(true)
@@ -191,6 +243,81 @@ function Dashboard() {
           </Card>
         )}
       </div>
+
+      {/* Service Availments (per-service counts over a date range) */}
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.5, delay: 0.2 }}>
+        <Card className="bg-[var(--color-card)] border border-[var(--color-border)] shadow-md">
+          <CardHeader>
+            <CardTitle className="text-[var(--color-foreground)] flex items-center gap-2">
+              <BarChart3 className="h-5 w-5 text-[var(--color-primary)]" /> Service Availments
+            </CardTitle>
+            <p className="text-xs text-[var(--color-foreground)]/60">How many patients availed each service in the selected period.</p>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {/* Filters: quick presets + custom From/To */}
+            <div className="flex flex-wrap items-end gap-2">
+              {[['today', 'Daily'], ['week', 'Weekly'], ['month', 'Monthly']].map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => applySvcQuick(key)}
+                  className={`px-4 py-2.5 rounded-xl text-sm font-bold transition-colors ${
+                    svcQuick === key ? 'bg-emerald-700 text-white' : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-100'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+              <div className="flex gap-2 sm:ml-auto">
+                <CustomDatePicker label="From" value={svcFrom} onChange={(v) => { setSvcFrom(v); setSvcQuick('custom') }} />
+                <CustomDatePicker label="To" align="right" value={svcTo} onChange={(v) => { setSvcTo(v); setSvcQuick('custom') }} />
+              </div>
+            </div>
+
+            {/* Totals for the range */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-100 text-center">
+                <p className="text-xs text-emerald-700/70">Total Availments</p>
+                <p className="text-lg font-bold text-emerald-900">{svcLoading ? '…' : svcStats.total_availed}</p>
+              </div>
+              <div className="p-3 rounded-lg bg-gray-50 border border-gray-200 text-center">
+                <p className="text-xs text-gray-600">Revenue (range)</p>
+                <p className="text-lg font-bold text-gray-800">{svcLoading ? '…' : formatCurrency(svcStats.total_revenue)}</p>
+              </div>
+            </div>
+
+            {svcLoading ? (
+              <div className="flex items-center justify-center py-10"><Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" /></div>
+            ) : svcStats.data.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left min-w-[520px]">
+                  <thead className="bg-gray-50 border-b">
+                    <tr>
+                      <th className="p-3 text-[11px] font-bold text-gray-500 uppercase">Service</th>
+                      <th className="p-3 text-[11px] font-bold text-gray-500 uppercase text-right">Availed</th>
+                      <th className="p-3 text-[11px] font-bold text-gray-500 uppercase text-right">Receipts</th>
+                      <th className="p-3 text-[11px] font-bold text-gray-500 uppercase text-right">Revenue</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y">
+                    {svcStats.data.map((s) => (
+                      <tr key={s.name} className={`hover:bg-emerald-50/30 ${s.availed === 0 ? 'opacity-50' : ''}`}>
+                        <td className="p-3 font-semibold text-gray-900 flex items-center gap-2">
+                          <Stethoscope className="h-4 w-4 text-emerald-300 shrink-0" />{s.name}
+                        </td>
+                        <td className={`p-3 text-right font-bold ${s.availed > 0 ? 'text-emerald-700' : 'text-gray-400'}`}>{s.availed}</td>
+                        <td className="p-3 text-right text-sm text-gray-600">{s.transactions}</td>
+                        <td className="p-3 text-right text-sm font-semibold text-gray-800">{formatCurrency(s.revenue)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-center py-8 text-[var(--color-foreground)]/60">No services availed in this period.</div>
+            )}
+          </CardContent>
+        </Card>
+      </motion.div>
 
       {/* Yakap Member Verified (manual enrollments only) */}
       {canViewEmployees && (

@@ -5,9 +5,64 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use App\Models\Transaction;
+use App\Models\Service;
 
 class ReportController extends Controller
 {
+    public function serviceStats(Request $request)
+    {
+        $today = Carbon::today()->toDateString();
+        $from = $request->get('from', $today);
+        $to = $request->get('to', $today);
+        if ($from > $to) {
+            [$from, $to] = [$to, $from];
+        }
+
+        // Start with EVERY service in the catalog so the dashboard always
+        // lists them all, including those with zero availments in the range.
+        $stats = [];
+        foreach (Service::orderBy('name')->pluck('name') as $name) {
+            $stats[$name] = ['name' => $name, 'availed' => 0, 'transactions' => 0, 'revenue' => 0.0];
+        }
+
+        Transaction::whereBetween('transaction_date', [$from, $to])
+            ->select('id', 'items')
+            ->orderBy('id') // chunk() requires an explicit ordering
+            ->chunk(500, function ($transactions) use (&$stats) {
+                foreach ($transactions as $tx) {
+                    foreach ($tx->items ?? [] as $item) {
+                        $name = $item['name'] ?? 'Unknown';
+                        if (!isset($stats[$name])) {
+                            // Item from a renamed/deleted service — still counted.
+                            $stats[$name] = ['name' => $name, 'availed' => 0, 'transactions' => 0, 'revenue' => 0.0];
+                        }
+                        $stats[$name]['availed'] += (float) ($item['qty'] ?? 1);
+                        $stats[$name]['transactions'] += 1;
+                        $stats[$name]['revenue'] += (float) ($item['subtotal'] ?? (($item['price'] ?? 0) * ($item['qty'] ?? 1)));
+                    }
+                }
+            });
+
+        $rows = collect($stats)
+            ->map(fn ($r) => [
+                'name' => $r['name'],
+                'availed' => (int) $r['availed'],
+                'transactions' => $r['transactions'],
+                'revenue' => round($r['revenue'], 2),
+            ])
+            ->sortBy([['availed', 'desc'], ['name', 'asc']])
+            ->values();
+
+        return response()->json([
+            'success' => true,
+            'from' => $from,
+            'to' => $to,
+            'data' => $rows,
+            'total_availed' => (int) $rows->sum('availed'),
+            'total_revenue' => round($rows->sum('revenue'), 2),
+        ]);
+    }
+
     /**
      * Overall sales summary: quick totals (today/week/month/year) plus a
      * breakdown grouped by the requested period (daily|weekly|monthly|yearly).

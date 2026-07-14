@@ -137,6 +137,13 @@ export const getSalesReport = async (params = '') => {
   return res.json();
 };
 
+// SERVICE AVAILMENT STATS (any logged-in user) — per-service counts in a date range
+export const getServiceStats = async (params = '') => {
+  const res = await authenticatedRequest(`/reports/service-stats${params}`);
+  const data = await res.json();
+  return data.success ? data : { data: [], total_availed: 0, total_revenue: 0 };
+};
+
 // DISCOUNT ENROLLEES (PWD / Senior / Yakap Member registry, admin + super admin)
 export const getDiscountEnrollees = (params = '') => list('discount-enrollees', params);
 export const createDiscountEnrollee = (data) => create('discount-enrollees', data);

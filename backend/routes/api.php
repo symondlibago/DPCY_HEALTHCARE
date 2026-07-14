@@ -41,6 +41,9 @@ Route::middleware('auth:sanctum')->group(function () {
     // Daily expenses
     Route::apiResource('expenses', ExpenseController::class);
 
+    // Per-service availment counts for the Dashboard
+    Route::get('/reports/service-stats', [ReportController::class, 'serviceStats']);
+
     // Sales reports (daily/weekly/monthly/yearly): admin + super admin
     Route::middleware('role:admin,super_admin')->group(function () {
         Route::get('/reports/sales', [ReportController::class, 'sales']);
