@@ -574,7 +574,7 @@ function Dashboard() {
                       <Wallet className="h-4 w-4 text-red-500" />
                       <div className="flex-1">
                         <p className="text-sm text-[var(--color-foreground)]">{e.description}</p>
-                        <p className="text-xs text-[var(--color-foreground)]/60">{e.category || 'Uncategorized'}</p>
+                        <p className="text-xs text-[var(--color-foreground)]/60">{e.category || 'Uncategorized'} · {formatTimeAgo(e.created_at)}</p>
                       </div>
                       <div className="text-sm font-semibold text-red-500">{formatCurrency(e.amount)}</div>
                     </div>
