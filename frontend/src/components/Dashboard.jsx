@@ -105,6 +105,64 @@ function Dashboard() {
     return () => { cancelled = true }
   }, [svcFrom, svcTo])
 
+  // Recent Transactions panel (own range filter, independent of the daily cards)
+  const [txQuick, setTxQuick] = useState('today')
+  const [txFrom, setTxFrom] = useState(todayStr())
+  const [txTo, setTxTo] = useState(todayStr())
+  const [txLoading, setTxLoading] = useState(true)
+
+  const applyTxQuick = (key) => {
+    setTxQuick(key)
+    if (key === 'today') { const t = todayStr(); setTxFrom(t); setTxTo(t) }
+    else if (key === 'week') { const [f, t] = getWeekRange(); setTxFrom(f); setTxTo(t) }
+    else if (key === 'month') { const [f, t] = getMonthRange(); setTxFrom(f); setTxTo(t) }
+  }
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      setTxLoading(true)
+      try {
+        const res = await getTransactions(`?from=${txFrom}&to=${txTo}`)
+        if (!cancelled) setRecentTx(res)
+      } catch (e) {
+        console.error('Transactions error:', e)
+      } finally {
+        if (!cancelled) setTxLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [txFrom, txTo])
+
+  // Recent Expenses panel (own range filter, independent of the daily cards)
+  const [expQuick, setExpQuick] = useState('today')
+  const [expFrom, setExpFrom] = useState(todayStr())
+  const [expTo, setExpTo] = useState(todayStr())
+  const [expLoading, setExpLoading] = useState(true)
+
+  const applyExpQuick = (key) => {
+    setExpQuick(key)
+    if (key === 'today') { const t = todayStr(); setExpFrom(t); setExpTo(t) }
+    else if (key === 'week') { const [f, t] = getWeekRange(); setExpFrom(f); setExpTo(t) }
+    else if (key === 'month') { const [f, t] = getMonthRange(); setExpFrom(f); setExpTo(t) }
+  }
+
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      setExpLoading(true)
+      try {
+        const res = await getExpenses(`?from=${expFrom}&to=${expTo}`)
+        if (!cancelled) setRecentExp(res)
+      } catch (e) {
+        console.error('Expenses error:', e)
+      } finally {
+        if (!cancelled) setExpLoading(false)
+      }
+    })()
+    return () => { cancelled = true }
+  }, [expFrom, expTo])
+
   const fetchData = useCallback(async () => {
     setLoading(true)
     try {
@@ -127,8 +185,6 @@ function Dashboard() {
         employees: attendanceRows.length,
         activeServices: services.filter((s) => s.is_active).length
       })
-      setRecentTx(txs.slice(0, 5))
-      setRecentExp(exps.slice(0, 5))
       setAttendance(attendanceRows)
       setEnrolleeStats(enrolleeStatsRes)
       setLastUpdated(new Date())
@@ -441,11 +497,29 @@ function Dashboard() {
                 <Receipt className="h-5 w-5 text-[var(--color-primary)]" /> Recent Transactions
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              {loading ? (
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap items-end gap-2">
+                {[['today', 'Daily'], ['week', 'Weekly'], ['month', 'Monthly']].map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => applyTxQuick(key)}
+                    className={`px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
+                      txQuick === key ? 'bg-emerald-700 text-white' : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+                <div className="flex gap-2 sm:ml-auto">
+                  <CustomDatePicker label="From" value={txFrom} onChange={(v) => { setTxFrom(v); setTxQuick('custom') }} />
+                  <CustomDatePicker label="To" align="right" value={txTo} onChange={(v) => { setTxTo(v); setTxQuick('custom') }} />
+                </div>
+              </div>
+
+              {txLoading ? (
                 <div className="flex items-center justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" /></div>
               ) : recentTx.length > 0 ? (
-                <div className="space-y-3">
+                <div className="max-h-80 overflow-y-auto space-y-3 pr-1">
                   {recentTx.map((t) => (
                     <div key={t.id} className="flex items-center gap-3">
                       <Receipt className="h-4 w-4 text-[var(--color-primary)]" />
@@ -458,7 +532,7 @@ function Dashboard() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-[var(--color-foreground)]/60">No transactions today</div>
+                <div className="text-center py-8 text-[var(--color-foreground)]/60">No transactions in this period</div>
               )}
             </CardContent>
           </Card>
@@ -472,11 +546,29 @@ function Dashboard() {
                 <Wallet className="h-5 w-5 text-[var(--color-primary)]" /> Recent Expenses
               </CardTitle>
             </CardHeader>
-            <CardContent>
-              {loading ? (
+            <CardContent className="space-y-4">
+              <div className="flex flex-wrap items-end gap-2">
+                {[['today', 'Daily'], ['week', 'Weekly'], ['month', 'Monthly']].map(([key, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => applyExpQuick(key)}
+                    className={`px-3 py-2 rounded-xl text-xs font-bold transition-colors ${
+                      expQuick === key ? 'bg-emerald-700 text-white' : 'bg-white border border-gray-300 text-gray-600 hover:bg-gray-100'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+                <div className="flex gap-2 sm:ml-auto">
+                  <CustomDatePicker label="From" value={expFrom} onChange={(v) => { setExpFrom(v); setExpQuick('custom') }} />
+                  <CustomDatePicker label="To" align="right" value={expTo} onChange={(v) => { setExpTo(v); setExpQuick('custom') }} />
+                </div>
+              </div>
+
+              {expLoading ? (
                 <div className="flex items-center justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" /></div>
               ) : recentExp.length > 0 ? (
-                <div className="space-y-3">
+                <div className="max-h-80 overflow-y-auto space-y-3 pr-1">
                   {recentExp.map((e) => (
                     <div key={e.id} className="flex items-center gap-3">
                       <Wallet className="h-4 w-4 text-red-500" />
@@ -489,7 +581,7 @@ function Dashboard() {
                   ))}
                 </div>
               ) : (
-                <div className="text-center py-8 text-[var(--color-foreground)]/60">No expenses today</div>
+                <div className="text-center py-8 text-[var(--color-foreground)]/60">No expenses in this period</div>
               )}
             </CardContent>
           </Card>
