@@ -127,8 +127,8 @@ function Dashboard() {
         employees: attendanceRows.length,
         activeServices: services.filter((s) => s.is_active).length
       })
-      setRecentTx(txs.slice(0, 5))
-      setRecentExp(exps.slice(0, 5))
+      setRecentTx(txs.slice(0, 10))
+      setRecentExp(exps.slice(0, 10))
       setAttendance(attendanceRows)
       setEnrolleeStats(enrolleeStatsRes)
       setLastUpdated(new Date())
@@ -445,7 +445,7 @@ function Dashboard() {
               {loading ? (
                 <div className="flex items-center justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" /></div>
               ) : recentTx.length > 0 ? (
-                <div className="space-y-3">
+                <div className="max-h-80 overflow-y-auto space-y-3 pr-1">
                   {recentTx.map((t) => (
                     <div key={t.id} className="flex items-center gap-3">
                       <Receipt className="h-4 w-4 text-[var(--color-primary)]" />
@@ -476,7 +476,7 @@ function Dashboard() {
               {loading ? (
                 <div className="flex items-center justify-center py-8"><Loader2 className="h-8 w-8 animate-spin text-[var(--color-primary)]" /></div>
               ) : recentExp.length > 0 ? (
-                <div className="space-y-3">
+                <div className="max-h-80 overflow-y-auto space-y-3 pr-1">
                   {recentExp.map((e) => (
                     <div key={e.id} className="flex items-center gap-3">
                       <Wallet className="h-4 w-4 text-red-500" />
